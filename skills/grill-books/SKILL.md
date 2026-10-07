@@ -9,7 +9,7 @@ Use the `data-contract` and `scripted-arithmetic` skills throughout. Facts come 
 If no source file was given, ask for one and stop.
 
 ## 1. Profile
-Write and run a profiling script that follows script-rules.md. Report the facts to the user in 8 lines or fewer. Do not interpret them yet.
+Write and run a profiling script that follows [script-rules.md](../scripted-arithmetic/script-rules.md). Report the facts to the user in 8 lines or fewer. Do not interpret them yet.
 
 ## 2. Round 1: purpose
 Ask at most 4 numbered questions, each with a recommended answer based on the profile:
@@ -39,11 +39,11 @@ When an answer conflicts with the data, say so using numbers from a script, e.g.
 Read the filled slots back to the user, slot by slot, and get explicit confirmation. Change anything they correct.
 
 ## 5. Write
-Write `branches/<branch>.md` in the user's working folder using the slot template exactly, including one worked example built by running a script on 3–4 real rows.
+Write `branches/<branch>.md` in the user's working folder using the slot template in [data-contract.md](../data-contract/data-contract.md) exactly, including one worked example built by running a script on 3–4 real rows.
 
 ## 6. Offer to run
 Ask: "Want me to run it now and produce the import file?" If yes:
-1. Write `branches/<branch>.py` from the contract, following script-rules.md (constants block, all required checks, all three outputs).
+1. Write `branches/<branch>.py` from the contract, following [script-rules.md](../scripted-arithmetic/script-rules.md) (constants block, all required checks, all three outputs).
 2. Print the echo lines.
 3. Run the script on the source file, with the period taken from the answer to Round 1.
 4. Report the result of every check. If any check failed, show the failures and ask how to resolve them. Do not change data or checks to make them pass.

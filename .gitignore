@@ -8,3 +8,22 @@ wheels/
 
 # Virtual environments
 .venv
+
+# IDE
+.idea/
+.vscode
+
+# Windows download metadata
+*:Zone.Identifier
+
+# Sandbox / home-folder artifacts
+.bash_profile
+.bashrc
+.profile
+.zprofile
+.zshrc
+.gitconfig
+.gitmodules
+.mcp.json
+.ripgreprc
+.claude/

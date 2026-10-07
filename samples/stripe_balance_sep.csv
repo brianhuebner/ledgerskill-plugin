@@ -1,0 +1,11 @@
+id,created,type,reporting_category,amount,fee,net,currency,payout_id,location
+txn_001,2026-09-01 10:14:00,charge,charge,120.00,3.78,116.22,usd,po_A1,LOC01
+txn_002,2026-09-01 11:02:00,charge,charge,45.50,1.62,43.88,usd,po_A1,LOC02
+txn_003,2026-09-01 15:40:00,charge,charge,"1,250.00",36.55,"1,213.45",usd,po_A1,LOC01
+txn_004,2026-09-02 09:05:00,refund,refund,(45.50),0.00,(45.50),usd,po_A1,LOC02
+txn_005,2026-09-02 12:30:00,charge,charge,310.00,9.29,300.71,usd,po_A1,
+txn_006,2026-09-03 08:00:00,payout,payout,"(1,628.76)",0.00,"(1,628.76)",usd,po_A1,
+txn_007,2026-09-03 13:20:00,charge,charge,88.00,2.85,85.15,usd,po_B2,LOC02
+txn_008,2026-09-04 10:45:00,charge,charge,640.25,18.87,621.38,usd,po_B2,LOC01
+txn_009,2026-09-04 16:10:00,adjustment,adjustment,-15.00,0.00,-15.00,usd,po_B2,LOC01
+txn_010,2026-09-05 08:00:00,payout,payout,(691.53),0.00,(691.53),usd,po_B2,

@@ -1,0 +1,9 @@
+Account #,Full name,Type,Detail type,Description
+1000,Checking,Bank,Checking,Operating account
+1099,Stripe Clearing,Other Current Assets,Undeposited Funds,Stripe balance awaiting payout
+1200,Accounts Receivable (A/R),Accounts receivable (A/R),Accounts Receivable (A/R),
+2000,Accounts Payable (A/P),Accounts payable (A/P),Accounts Payable (A/P),
+4000,Sales,Income,Sales of Product Income,
+4050,Refunds and Returns,Income,Discounts/Refunds Given,
+6150,Merchant Fees,Expenses,Bank Charges,Card processing fees
+6900,Payment Processor Adjustments,Expenses,Other Miscellaneous Service Cost,Stripe adjustments and disputes

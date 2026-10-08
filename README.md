@@ -26,6 +26,19 @@ To update later:
 /plugin marketplace update ledgerskill
 ```
 
+## Try it in 2 minutes
+
+Nothing to export yet. Start Claude Code in an empty folder and run:
+
+```
+/ledgerskill:demo
+/ledgerskill:grill-books stripe_balance_sep.csv
+```
+
+The first command copies a sample Stripe export and a sample chart of accounts into the folder.
+
+When the questions come, reply `use your recommendations`. Answer yes when Claude offers to run it, then open `runs/` to see the import file.
+
 ## Usage
 
 Start Claude Code in the folder where you keep your books, then:
@@ -62,6 +75,7 @@ If a check fails, no `import.csv` is written. Claude shows you the failures and 
 |---|---|---|
 | `grill-books` | You type it | Interviews you about one workflow and file, and writes the contract |
 | `run-branch` | You type it | Runs an existing branch on a new period's file |
+| `demo` | You type it | Copies a sample Stripe file and chart of accounts into the current folder |
 | `data-contract` | Automatic | Fixed vocabulary and slot template for every contract |
 | `scripted-arithmetic` | Automatic | Rules every data script must follow |
 
@@ -77,5 +91,3 @@ To test changes from a local checkout, add the checkout as a marketplace:
 After editing, run `/plugin marketplace update ledgerskill` and restart Claude Code.
 
 You can also load the checkout directly with `claude --plugin-dir <path>`. If your setup blocks reads outside the working directory, add `--add-dir <path>` as well, so Claude can open the skills' reference files.
-
-`samples/stripe_balance_sep.csv` is a small sample file to try it on.

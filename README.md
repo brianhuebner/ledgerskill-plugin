@@ -39,23 +39,79 @@ The first command writes a sample Stripe export and a sample chart of accounts i
 
 When the questions come, reply `use your recommendations`. Answer yes when Claude offers to run it, then open `runs/` to see the import file.
 
-## Usage
+## Usage with your own books
 
-Start Claude Code in the folder where you keep your books, then:
+### 1. Make a books folder
+
+Create an empty folder anywhere, for example `~/books`. Your books stay in QuickBooks, Xero or whatever you use. This folder only holds the files you export and the files the plugin writes.
+
+### 2. Export your chart of accounts
+
+In most bookkeeping apps the chart of accounts has an export on its own page. Save it as CSV (not Excel) into the books folder. With it, Claude recommends only accounts that exist, spelled the way your import expects.
+
+It's optional. Without it, reply `skip` when asked and Claude takes account names from your answers, unchecked.
+
+### 3. Export one source file
+
+Export a CSV from wherever the transactions come from, such as a Stripe balance report, a Square sales export, a bank statement or a POS report, and save it into the books folder. One file covering many days is the normal case. The point is to turn hundreds of rows into a few summarized entries.
+
+### 4. Grill it
+
+Start Claude Code in the books folder and run:
 
 ```
-/ledgerskill:grill-books path/to/transactions.csv
+/ledgerskill:grill-books
 ```
 
-Claude profiles the file, asks a few rounds of numbered questions (each with a recommended answer), reads the contract back to you, and writes `branches/<branch>.md`. It then offers to generate `branches/<branch>.py` and produce the import file.
+Claude finds the two files and asks you to confirm which is which. It profiles the source file, then asks about three rounds of numbered questions, each with a recommended answer. Reply `use your recommendations` to accept them all, or answer in your own words. It reads the result back to you, saves it as `branches/<branch>.md`, and offers to produce the import file.
 
-Next period, run the same workflow on a new file:
+### 5. What happens to your file
+
+Your answers decide:
+
+- **Which rows count.** Payouts posted by the bank deposit are left out, with the reason recorded.
+- **Which account each kind of row goes to,** from your chart of accounts.
+- **How rows are summarized:** one entry per payout, per day or per week, and one line per category, location or other column.
+- **Which tags carry over,** such as a location column becoming a QuickBooks Class.
+- **Fixed values you state in plain words,** such as "use the customer 'Stripe Payments' on every A/R line".
+- **What the result must agree with,** such as the deposit on your bank statement.
+
+Here is payout `po_A1` from the demo file: six Stripe rows
+
+| id | type | net | location |
+|---|---|---|---|
+| txn_001 | charge | 116.22 | LOC01 |
+| txn_002 | charge | 43.88 | LOC02 |
+| txn_003 | charge | 1,213.45 | LOC01 |
+| txn_004 | refund | (45.50) | LOC02 |
+| txn_005 | charge | 300.71 | |
+| txn_006 | payout | (1,628.76) | |
+
+become one journal entry with five lines:
+
+| account | debit | credit | Class |
+|---|---|---|---|
+| Sales | | 1,329.67 | LOC01 |
+| Sales | | 43.88 | LOC02 |
+| Sales | | 300.71 | Unassigned |
+| Refunds and Returns | 45.50 | | LOC02 |
+| Stripe Clearing | 1,628.76 | | |
+
+The two LOC01 charges are summed into one line, the row with no location goes to Class "Unassigned", and the payout row is left out because the bank deposit records it. The entry balances and ties to the $1,628.76 deposit. Each of those rules came from a grill answer, so changing an answer changes the result.
+
+### 6. Import it
+
+`import.csv` is plain journal lines: entry, date, account, debit, credit, one column per tag, and a memo. Bring it in with whatever you already use (your app's journal entry import, SaaSAnt or similar), and map the columns once.
+
+### Next period
+
+Export the new file into the same folder and run:
 
 ```
 /ledgerskill:run-branch path/to/next-month.csv
 ```
 
-It picks the matching branch, stops to ask about anything new in the file, and runs the script.
+It picks the matching workflow, stops to ask only about anything new in the file (a new category or location, for example), and produces the import file.
 
 ### Output
 

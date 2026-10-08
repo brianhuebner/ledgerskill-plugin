@@ -4,7 +4,7 @@ description: Interview the user about one accounting workflow and one source fil
 disable-model-invocation: true
 ---
 
-Use the `data-contract` and `scripted-arithmetic` skills throughout. Facts come from the file through scripts. Only decisions come from the user.
+Load the `ledgerskill:data-contract` and `ledgerskill:scripted-arithmetic` skills first, and follow them throughout. Facts come from the file through scripts. Only decisions come from the user.
 
 ## 0. Find the files
 You need one source file and, ideally, a chart of accounts.
@@ -13,7 +13,7 @@ You need one source file and, ideally, a chart of accounts.
 - If there is no chart of accounts, ask once: *"Do you have a chart of accounts export? In most bookkeeping apps it's on the Chart of Accounts page; save it as CSV into this folder. Or reply `skip` and I'll take account names from your answers, unchecked."* If the user skips, the contract's chart is None. Do not ask again.
 
 ## 1. Profile
-Write and run a profiling script that follows [script-rules.md](../scripted-arithmetic/script-rules.md) on the source file and, if there is one, the chart. Report the facts to the user in 8 lines or fewer. Do not interpret them yet.
+Write and run a profiling script that follows the `scripted-arithmetic` rules on the source file and, if there is one, the chart. Report the facts to the user in 8 lines or fewer. Do not interpret them yet.
 
 If there is a chart, ask in Round 1 which column holds the account names to import. Recommend the column with all-unique, non-blank values that the user's import tool matches on, usually the full name.
 
@@ -46,11 +46,11 @@ When an answer conflicts with the data, say so using numbers from a script, e.g.
 Read the filled slots back to the user, slot by slot, including the chart of accounts and fixed fields, and get explicit confirmation. Change anything they correct.
 
 ## 5. Write
-Write `branches/<branch>.md` in the user's working folder using the slot template in [data-contract.md](../data-contract/data-contract.md) exactly, including one worked example built by running a script on 3–4 real rows.
+Write `branches/<branch>.md` in the user's working folder using the `data-contract` slot template exactly, including one worked example built by running a script on 3–4 real rows.
 
 ## 6. Offer to run
 Ask: "Want me to run it now and produce the import file?" If yes:
-1. Write `branches/<branch>.py` from the contract, following [script-rules.md](../scripted-arithmetic/script-rules.md) (constants block, all required checks, all three outputs).
+1. Write `branches/<branch>.py` from the contract, following the `scripted-arithmetic` rules (constants block, all required checks, all three outputs).
 2. Print the echo lines.
 3. Run the script on the source file, with the period taken from the answer to Round 1.
 4. Report the result of every check. If any check failed, show the failures and ask how to resolve them. Do not change data or checks to make them pass.

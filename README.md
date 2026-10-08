@@ -90,4 +90,4 @@ To test changes from a local checkout, add the checkout as a marketplace:
 
 After editing, run `/plugin marketplace update ledgerskill` and restart Claude Code.
 
-You can also load the checkout directly with `claude --plugin-dir <path>`. If your setup blocks reads outside the working directory, add `--add-dir <path>` as well, so Claude can open the skills' reference files.
+You can also load the checkout directly with `claude --plugin-dir <path>`. Each skill is a single `SKILL.md` with no reference files, so the plugin works even when reads outside the working directory are blocked.

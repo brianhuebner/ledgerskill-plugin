@@ -15,11 +15,13 @@ A data contract states, in fixed slots, exactly how rows of one source file beco
 | **Line key** | Column(s) whose distinct values make one line within an entry | `reporting_category`, `location` |
 | **Output grain** | What one output line represents; always entry key + line key | One line per payout × category × location |
 | **Rollup** | How the measure combines within a line, and when rounding happens | Sum; round to cents after summing |
+| **Chart of accounts** | A CSV of the user's accounts, exported from their bookkeeping app, and the column that holds each account's name | `chart-of-accounts.csv`, column `Full name` |
 | **Category column** | The source column that decides the account | `reporting_category` |
 | **Mapping** | Category value → account and side; covers every value in scope | `charge` → 4000 Sales, credit |
 | **Dimension** | A source column carried to the ledger as a tag; never changes the account | `location` → QBO Class |
 | **Dimension mapping** | Source value → ledger dimension value | `LOC01` → Class "Downtown" |
 | **Blank rule** | What happens when a category or dimension value is blank | Class "Unassigned" + flag |
+| **Fixed field** | A ledger field set to one value the user chose, on the lines of one account or on all lines | Customer "Stripe Payments" on every Accounts Receivable (A/R) line |
 | **Offset line** | The line that balances each entry | 1099 Stripe Clearing |
 | **Control total** | The external number the output must agree with | Payout amount on the bank statement |
 
@@ -32,6 +34,8 @@ A **branch** is one named workflow with one contract (e.g. `stripe-payout-settle
 3. **Every dimension is in the line key.** Otherwise the rollup merges dimension values and the tag is lost.
 4. **QBO Class ≠ QBO Location.** Two separate QuickBooks Online fields. Ask which one a column maps to.
 5. **Excluded ≠ unmapped.** Excluded rows are left out on purpose, with a reason. An unmapped value stops the run and becomes a question. There is no catch-all "other" account.
+6. **Accounts come from the chart.** When there is a chart of accounts, every account in the mapping, the offset line and the fixed fields is spelled exactly as in its account column. An account not in the chart is a question, never a new account.
+7. **Dimension ≠ fixed field.** A dimension's value comes from a source column and can differ row to row. A fixed field's value is a constant the user stated; it is not read from the source.
 
 ## Slot template
 
@@ -55,6 +59,7 @@ Output grain:  one line per <entry key> × <line key>
 Rollup:        sum `<col>`; round to cents after summing
 
 ## Mapping (category column: `<col>`)
+Chart of accounts: `<file>`, column `<col>`   (or None — account names not checked)
 | Value | Account | Side when positive |
 |---|---|---|
 | `<value>` | <code name> | Debit / Credit |
@@ -64,6 +69,12 @@ Unmapped value → stop and ask.
 | Source column | Ledger field | Mapping | Blank rule |
 |---|---|---|---|
 | `<col>` | <field> | `<value>` → "<ledger value>", … | <rule> |
+(or None)
+
+## Fixed fields
+| Applies to | Ledger field | Value |
+|---|---|---|
+| <account, or "all lines"> | <field> | "<value>" |
 (or None)
 
 Offset line:   <account>, one per entry

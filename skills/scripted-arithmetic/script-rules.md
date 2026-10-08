@@ -29,9 +29,11 @@ EXCLUSIONS = {"payout": "posted by bank deposit"}   # value -> reason
 MEASURE = "net"
 ENTRY_KEY = ["payout_id"]
 LINE_KEY = ["reporting_category", "location"]
+CHART = {"file": "chart-of-accounts.csv", "column": "Full name"}   # or None
 CATEGORY_COLUMN = "reporting_category"
 MAPPING = {"charge": ("4000 Sales", "Credit")}       # value -> (account, side when positive)
 DIMENSIONS = {"location": {"field": "Class", "map": {"LOC01": "Downtown"}, "blank": "Unassigned"}}
+FIXED_FIELDS = [("Accounts Receivable (A/R)", "Customer", "Stripe Payments")]   # (account or "all lines", field, value)
 OFFSET_ACCOUNT = "1099 Stripe Clearing"
 ENTRY_DATE = ("created", "max")
 ```
@@ -40,7 +42,7 @@ If the contract changes, regenerate the script. Never let the two drift apart.
 
 ## Required checks
 
-Every processing script runs all of these and prints one line per check, `PASS` or `FAIL`, with the numbers:
+Every processing script runs all of these and prints one line per check, `PASS`, `WARN` or `FAIL`, with the numbers:
 
 1. **Completeness:** rows in = rows used + rows excluded, and every excluded row has a reason.
 2. **Unique row key:** no duplicate row key values.
@@ -49,16 +51,18 @@ Every processing script runs all of these and prints one line per check, `PASS` 
 5. **Amount conservation:** the signed sum of the measure over used rows equals the signed sum of output lines before the offset.
 6. **Balance:** every entry's debits equal its credits, to the cent.
 7. **Control total** (when given): the output agrees with it per entry key, and any difference is shown.
+8. **Accounts in chart:** every account in `MAPPING`, `OFFSET_ACCOUNT` and `FIXED_FIELDS` appears exactly in the chart's account column. A missing account is a FAIL that names it. When `CHART` is None, this check is a WARN: "account names not checked".
+9. **Fixed fields used:** every fixed field whose account is not "all lines" lands on at least one output line. A fixed field that lands on no line is a WARN that names it.
 
-If any check fails, the script prints every failure and exits with status 1. It still writes `checks.txt` but writes no `import.csv`. The script never "fixes" data to pass.
+A WARN does not stop the run. If any check fails, the script prints every failure and exits with status 1. It still writes `checks.txt` but writes no `import.csv`. The script never "fixes" data to pass.
 
 ## Outputs
 
 Write to `runs/<period>/<branch>/`:
 
-- `import.csv`: balanced journal lines with columns `entry`, `date`, `account`, `debit`, `credit`, one column per dimension field, `memo`. Debit and credit are positive and two-decimal; exactly one is filled.
+- `import.csv`: balanced journal lines with columns `entry`, `date`, `account`, `debit`, `credit`, one column per dimension field, one column per fixed field (blank on lines it does not apply to), `memo`. Debit and credit are positive and two-decimal; exactly one is filled.
 - `detail.csv`: one row per source row, with `row`, the row key, `status` (`used` / `excluded`), `reason`, `account`, `amount`, and `import_line` (the `import.csv` line it feeds, blank if excluded).
-- `checks.txt`: the header (source file name, SHA-256, branch, run time) followed by the check lines.
+- `checks.txt`: the header (source file name and SHA-256, chart file name and SHA-256 or "no chart", branch, run time) followed by the check lines.
 
 ## Profiling scripts
 

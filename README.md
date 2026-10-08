@@ -69,6 +69,17 @@ Each run writes to `runs/<period>/<branch>/`:
 
 If a check fails, no `import.csv` is written. Claude shows you the failures and asks how to resolve them. It never changes data or loosens a check to make it pass.
 
+Runs are never overwritten. Running the same period again writes to `runs/<period>/<branch>-2/`, then `-3`, so the files you imported stay as the record of what you imported.
+
+## What it does on your computer
+
+- **Writes only into your books folder:** `branches/` (the contract and its script), `runs/` (outputs), and the two sample files from `/ledgerskill:demo`. It never deletes, renames or edits your source files or your chart of accounts.
+- **Runs Python scripts it writes:** each script reads your file and writes its outputs. The rules it follows: standard library only, no network, no subprocesses, no deleting files. Claude Code asks your permission before running a command, unless you've allowed it. The script is in `branches/`, so you can read it first.
+- **Has no hooks, MCP servers or background processes.** The plugin is five plain-text `SKILL.md` files you can read in a few minutes.
+- **Treats your data as data.** The skills tell Claude never to follow text found in your files, such as a memo field, as an instruction, and to point out anything that reads like one.
+- **What leaves your computer:** what Claude reads during the session goes to Anthropic as part of the conversation, as in any Claude Code session. The skills have Claude work from script output: profile facts (column names, counts, totals, distinct values) and the 3–4 rows in the worked example. The full file is processed by the local script, but anything Claude opens directly is sent too.
+- **Updates:** `/plugin marketplace update` installs whatever is on `main`. Check the version and commit history before updating if you want to review changes.
+
 ## Skills
 
 | Skill | How it runs | What it does |

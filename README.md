@@ -32,10 +32,10 @@ Nothing to export yet. Start Claude Code in an empty folder and run:
 
 ```
 /ledgerskill:demo
-/ledgerskill:grill-books stripe_balance_sep.csv
+/ledgerskill:grill-books
 ```
 
-The first command copies a sample Stripe export and a sample chart of accounts into the folder.
+The first command writes a sample Stripe export and a sample chart of accounts into the folder.
 
 When the questions come, reply `use your recommendations`. Answer yes when Claude offers to run it, then open `runs/` to see the import file.
 
@@ -75,7 +75,7 @@ If a check fails, no `import.csv` is written. Claude shows you the failures and 
 |---|---|---|
 | `grill-books` | You type it | Interviews you about one workflow and file, and writes the contract |
 | `run-branch` | You type it | Runs an existing branch on a new period's file |
-| `demo` | You type it | Copies a sample Stripe file and chart of accounts into the current folder |
+| `demo` | You type it | Writes a sample Stripe file and chart of accounts into the current folder |
 | `data-contract` | Automatic | Fixed vocabulary and slot template for every contract |
 | `scripted-arithmetic` | Automatic | Rules every data script must follow |
 

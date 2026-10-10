@@ -76,28 +76,29 @@ Your answers decide:
 - **Fixed values you state in plain words,** such as "use the customer 'Stripe Payments' on every A/R line".
 - **What the result must agree with,** such as the deposit on your bank statement, and how many days that record may trail the file.
 
-Here is payout `po_A1` from the demo file: six Stripe rows
+Here is the demo file with `use your recommendations`. Its payout `po_A1` has six Stripe rows
 
-| id | type | net | location |
-|---|---|---|---|
-| txn_001 | charge | 116.22 | LOC01 |
-| txn_002 | charge | 43.88 | LOC02 |
-| txn_003 | charge | 1,213.45 | LOC01 |
-| txn_004 | refund | (45.50) | LOC02 |
-| txn_005 | charge | 300.71 | |
-| txn_006 | payout | (1,628.76) | |
+| id | type | amount | fee | net | location |
+|---|---|---|---|---|---|
+| txn_001 | charge | 120.00 | 3.78 | 116.22 | LOC01 |
+| txn_002 | charge | 45.50 | 1.62 | 43.88 | LOC02 |
+| txn_003 | charge | 1,250.00 | 36.55 | 1,213.45 | LOC01 |
+| txn_004 | refund | (45.50) | 0.00 | (45.50) | LOC02 |
+| txn_005 | charge | 310.00 | 9.29 | 300.71 | |
+| txn_006 | payout | (1,628.76) | 0.00 | (1,628.76) | |
 
-become one journal entry with five lines:
+that become one journal entry with six lines:
 
 | account | debit | credit | Class |
 |---|---|---|---|
-| Sales | | 1,329.67 | LOC01 |
-| Sales | | 43.88 | LOC02 |
-| Sales | | 300.71 | Unassigned |
+| Sales | | 1,370.00 | LOC01 |
+| Sales | | 45.50 | LOC02 |
+| Sales | | 310.00 | Unassigned |
 | Refunds and Returns | 45.50 | | LOC02 |
+| Merchant Fees | 51.24 | | |
 | Stripe Clearing | 1,628.76 | | |
 
-The two LOC01 charges are summed into one line, the row with no location goes to Class "Unassigned", and the payout row is left out because the bank deposit records it. The entry balances and ties to the $1,628.76 deposit. Each of those rules came from a grill answer, so changing an answer changes the result.
+Sales are booked at gross, and the fees become their own line. The two LOC01 charges are summed into one line. The row with no location goes to Class "Unassigned". The payout row is left out because the bank deposit records it. On every row, `amount` less `fee` equals the file's own `net`. The entry balances, and the clearing line ties to the $1,628.76 payout. Each of those rules came from a grill answer, so changing an answer changes the result. A payroll register or a loan statement gets its own rules the same way.
 
 ### 6. Import it
 

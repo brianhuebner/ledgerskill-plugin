@@ -70,8 +70,8 @@ Claude finds the two files and asks you to confirm which is which. It profiles t
 Your answers decide:
 
 - **Which rows count.** Payouts posted by the bank deposit are left out, with the reason recorded.
-- **Which account each kind of row goes to,** from your chart of accounts.
-- **How rows are summarized:** one entry per payout, per day or per week, and one line per category, location or other column.
+- **Which amounts become lines, and to which account,** from your chart of accounts. One row can feed more than one line: a card charge's gross to Sales and its fee to Merchant Fees, or a pay line's gross wages, employer taxes and withholdings.
+- **How rows are summarized:** one entry per payout, pay date, day or week, and within it each kind of line grouped its own way: sales by location, fees as one line per entry.
 - **Which tags carry over,** such as a location column becoming a QuickBooks Class.
 - **Fixed values you state in plain words,** such as "use the customer 'Stripe Payments' on every A/R line".
 - **What the result must agree with,** such as the deposit on your bank statement, and how many days that record may trail the file.

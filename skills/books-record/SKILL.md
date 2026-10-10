@@ -65,10 +65,10 @@ Set up: <YYYY-MM-DD>. Contract version: <N>.
 
 ## 2. Profile facts
 <Facts from the profiling script: columns used, row count, distinct values of the scope,
-category and dimension columns with counts, amount totals. Copied from script output.>
+mapping and dimension columns with counts, amount totals. Copied from script output.>
 
 Values seen:
-- `<column>`: `<value>`, `<value>`, …   (one line per line-key, dimension and code-like entry-key column)
+- `<column>`: `<value>`, `<value>`, …   (one line per Group by, dimension and code-like entry-key column)
 
 ## 3. Decisions
 | Question | Answer | User's words |

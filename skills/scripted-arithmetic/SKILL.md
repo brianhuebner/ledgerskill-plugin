@@ -42,16 +42,22 @@ CONTRACT = {"file": "branches/semi-monthly-payroll.md", "version": 1}   # versio
 ROW_KEY = ["employee_id", "pay_date"]
 SCOPE = {"column": "pay_type", "values": ["regular", "overtime", "bonus"]}
 EXCLUSIONS = {"reimbursement": "paid through expense reports"}   # value -> reason
-MEASURE = "gross_pay"
 ENTRY_KEY = ["pay_date"]
-LINE_KEY = ["pay_type", "department"]
+ROW_TOTAL = {"column": "net_pay", "terms": [("gross_pay", 1), ("employee_tax", -1)]}   # or None
 CHART = {"file": "chart-of-accounts.csv", "column": "Full name"}   # or None
 NAME_LIST = None   # {"file": ..., "column": ...} when the layout's line names are not accounts
-CATEGORY_COLUMN = "pay_type"
-MAPPING = {"regular": ("6000 Wages", "Debit"), "overtime": ("6010 Overtime Wages", "Debit"), "bonus": ("6020 Bonuses", "Debit")}   # value -> (account, side when positive)
-DIMENSIONS = {"department": {"field": "Class", "map": {"OPS": "Operations"}, "blank": "Unassigned"}}
-FIXED_FIELDS = [("2150 Wages Payable", "Vendor", "ADP")]   # (account or "all lines", field, value)
-OFFSET_ACCOUNT = "2150 Wages Payable"   # None when the layout is not balanced
+LINES = [   # one per rule in the Lines table, in order; "rows": "all" or {"column": ..., "values": [...]}
+    {"rule": "wages", "rows": "all", "amount": "gross_pay",
+     "account": {"mapping": "pay_type", "map": {"regular": ("6000 Wages", "Debit"), "overtime": ("6010 Overtime Wages", "Debit"),
+                                                "bonus": ("6020 Bonuses", "Debit")}},   # value -> (account, side when positive)
+     "side": None, "group_by": ["department"]},
+    {"rule": "employer-tax", "rows": "all", "amount": "employer_tax", "account": "6100 Payroll Taxes", "side": "Debit", "group_by": []},
+    {"rule": "employer-tax-owed", "rows": "all", "amount": "employer_tax", "account": "2100 Payroll Liabilities", "side": "Credit", "group_by": []},
+    {"rule": "withholding", "rows": "all", "amount": "employee_tax", "account": "2100 Payroll Liabilities", "side": "Credit", "group_by": []},
+]   # group_by [] means one line per entry
+OFFSET_ACCOUNT = "2150 Wages Payable"   # the offset row; None when the layout is not balanced
+DIMENSIONS = {"department": {"field": "Class", "map": {"OPS": "Operations"}, "blank": "Unassigned", "rules": ["wages"]}}
+FIXED_FIELDS = [("2100 Payroll Liabilities", "Vendor", "ADP")]   # (account or "all lines", field, value)
 ENTRY_DATE = ("pay_date", "max")
 CURRENCY_COLUMN = None   # the source column that holds the currency, when the file has one
 LAYOUT = {
@@ -77,20 +83,21 @@ If the contract changes, regenerate the script. Never let the two drift apart.
 
 Every processing script runs all of these and prints one line per check, `PASS`, `WARN` or `FAIL`, with the numbers:
 
-1. **Completeness:** rows in = rows used + rows excluded, and every excluded row has a reason.
+1. **Completeness:** rows in = rows used + rows excluded; every used row is read by at least one rule, and every excluded row has a reason.
 2. **Unique row key:** no duplicate row key values.
-3. **Mapped:** every category value in scope has a mapping. An unmapped value is a FAIL that lists the value and its rows.
-4. **Dimensions in line key:** every dimension column is in `LINE_KEY`.
-5. **Amount conservation:** the signed sum of the measure over used rows equals the signed sum of output lines before the offset.
+3. **Mapped:** for each rule that names a mapping, every value of its mapping column among the rule's rows has a mapping. An unmapped value is a FAIL that names the rule and lists the value and its rows.
+4. **Dimensions in group:** every dimension column is in the `group_by` of each rule that carries it.
+5. **Amount conservation:** per rule, the signed sum of its amount column over its rows equals the signed sum of its lines.
 6. **Balance** (when the layout is balanced): every entry's debits equal its credits, to the cent.
 7. **Control total:** compare the output with the outside amounts the user gave (see Outside facts). Each entry matches an outside amount, or is on the not-yet-posted list: PASS, listing any not-yet-posted entries. A mismatch is a FAIL that shows both numbers and the difference. When the user replied `skip`: WARN "not confirmed against <outside document>", and still compare with the file's own statement of the total when the contract names one. When the contract has no control total: WARN "no control total".
-8. **Names in list:** every line name in `MAPPING` and `OFFSET_ACCOUNT` appears exactly in the list the layout names: the chart's account column when line names are accounts, else `NAME_LIST`. Every account in `FIXED_FIELDS` appears exactly in the chart. A missing name is a FAIL that names it. When the list is None, this check is a WARN: "names not checked".
+8. **Names in list:** every line name in `LINES` (including its mappings) and `OFFSET_ACCOUNT` appears exactly in the list the layout names: the chart's account column when line names are accounts, else `NAME_LIST`. Every account in `FIXED_FIELDS` appears exactly in the chart. A missing name is a FAIL that names it. When the list is None, this check is a WARN: "names not checked".
 9. **Fixed fields used:** every fixed field whose account is not "all lines" lands on at least one output line. A fixed field that lands on no line is a WARN that names it.
 10. **Run ID on every line:** every `import.csv` line's memo contains this run's ID.
 11. **Entry numbers:** every entry has one entry number, no two entries share one, and each is within the layout's maximum length.
 12. **Amount style:** when signed, each entry's amounts sum to 0.00; when positive only, no line amount is below zero.
 13. **Required columns:** every column in the layout's `required` list is non-blank on every `import.csv` line.
 14. **One currency** (when the file has a currency column): the used rows hold one currency value. More than one is a FAIL that lists each value with its rows.
+15. **Row total** (when `ROW_TOTAL` is given): on every used row, the rule amount columns combined as `terms` states equal the row total column, to the cent. A row that differs is a FAIL that shows both numbers and its row number. This is the one check that compares the script's reading of a row with a number the source system computed.
 
 A WARN does not stop the run. If any check fails, the script prints every failure and exits with status 1. It still writes its run folder with `checks-<run id>.txt` and `detail.csv`, but no `import.csv`. The script never "fixes" data to pass.
 
@@ -128,7 +135,7 @@ Set `started = datetime.now().replace(microsecond=0)` once, when the run starts.
 Write to a new folder, `complete/<period>/<branch>-<run id>/`. If a folder with that name exists, add one second to `started` and take the next ID, until the folder is new. Never write into an existing folder. Print the run ID and the folder. An earlier run may already have been imported, and its files are the record of what was.
 
 - `import.csv`: balanced journal lines in the contract's import layout. `LAYOUT` sets the columns, their order and exact spelling, the amount style, the date format and the entry numbers. Amounts are two-decimal; under debit-credit both are positive and exactly one is filled; under signed, debit is positive and credit negative. Every memo ends with `<entry key value> · run <run id>`, e.g. `po_A1 · run LS-20260905-081200` or `2026-09-15 · run LS-20260916-140503`. If a memo must be shortened, shorten the other text and keep the run ID.
-- `detail.csv`: one row per source row, with `row`, the row key, `status` (`used` / `excluded`), `reason`, `account`, `amount`, and `import_line` (the `import.csv` line it feeds, blank if excluded).
+- `detail.csv`: one row per source row per rule that reads it, and one row per excluded source row, with `row`, the row key, `rule` (blank if excluded), `status` (`used` / `excluded`), `reason`, `account`, `amount`, and `import_line` (the `import.csv` line it feeds, blank if excluded).
 - `checks-<run id>.txt`: the run record. A YAML header, then one line per check, so the file identifies itself wherever it is attached. Every key is present; a key with no value is written empty.
 
 ```yaml

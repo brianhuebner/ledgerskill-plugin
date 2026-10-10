@@ -35,15 +35,15 @@ Ask only the questions whose prerequisites are settled, numbered, each with a re
 1. Branch name and basis (the observable fact that identifies this kind of file). If `branches/` already has a branch whose basis matches, propose using it and ask about differences only.
 2. Source grain and row key.
 3. Scope and exclusions (every distinct value of the scope column is either in scope or excluded with a reason).
-4. Measure and its sign.
-5. Entry key, line key, rollup, entry date.
-6. Mapping: every category value in scope gets an account and a side. When there is a chart, recommend only accounts from it, spelled exactly. If the user names an account that is not in the chart, say so and offer the closest accounts from it. When the layout's line names are not accounts (an invoice's products and services, for example), recommend names from the list the layout names instead; ask once for an export of that list, which the user may `skip`, as with the chart.
-7. Dimensions: for each low-cardinality text column the profile found, ask whether it goes to the ledger, which field, the value mapping and the blank rule.
+4. Line rules. Start with one rule for the main amount column: what a positive amount means, which rows it reads, its account (or the column whose values pick the account, each value getting an account and a side), and its Group by. For a file with one amount column these are the same questions as always, and the contract has one rule plus the offset.
+5. Entry key and entry date. When the profile finds a column that the amount columns add up to on every row (run a script to test it), recommend it as the Row total.
+6. Accounts: every rule, and every mapping value, gets an account and a side. When there is a chart, recommend only accounts from it, spelled exactly. If the user names an account that is not in the chart, say so and offer the closest accounts from it. When the layout's line names are not accounts (an invoice's products and services, for example), recommend names from the list the layout names instead; ask once for an export of that list, which the user may `skip`, as with the chart.
+7. Dimensions: for each low-cardinality text column the profile found, ask whether it goes to the ledger, which field, the value mapping, the blank rule and which rules carry it. A rule that carries a dimension groups by it.
 8. Fixed fields: ask whether any field should always have the same value, on one account's lines or on all lines. Recommend one when the mapping needs it: an Accounts Receivable or Accounts Payable line needs a Customer or Vendor name in QuickBooks. Accept fixed fields stated in plain words in any round, e.g. *"Use the customer 'Card Sales' for every A/R line"* or *"Put vendor 'ADP' on the payroll liability lines."*
-9. Offset line and control total.
+9. Offset row and control total.
 10. Edge cases the profile found: negative groups, blanks, unparseable values, duplicate keys.
 
-Every required column of the import layout that the contract does not fill yet is a question, with a recommended answer. When the layout is not balanced, the offset line is None and is not asked about.
+Every required column of the import layout that the contract does not fill yet is a question, with a recommended answer. When the layout is not balanced, there is no offset row and it is not asked about. Under `saasant-invoice` a rule's Account cell names a Product/Service.
 
 When an answer conflicts with the data, say so using numbers from a script, e.g. *"2 rows have no `location`, totaling $305.80. Where do they go?"* Run a script to get those numbers.
 

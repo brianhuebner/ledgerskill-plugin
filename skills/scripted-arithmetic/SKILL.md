@@ -36,21 +36,23 @@ A script built from a contract starts with a constants block that mirrors the co
 
 ```python
 # --- Contract: branches/<branch>.md ---
-BRANCH = "stripe-payout-settlement"
-ROW_KEY = ["id"]
-SCOPE = {"column": "type", "values": ["charge", "refund", "stripe_fee"]}
-EXCLUSIONS = {"payout": "posted by bank deposit"}   # value -> reason
-MEASURE = "net"
-ENTRY_KEY = ["payout_id"]
-LINE_KEY = ["reporting_category", "location"]
+BRANCH = "semi-monthly-payroll"
+ROW_KEY = ["employee_id", "pay_date"]
+SCOPE = {"column": "pay_type", "values": ["regular", "overtime", "bonus"]}
+EXCLUSIONS = {"reimbursement": "paid through expense reports"}   # value -> reason
+MEASURE = "gross_pay"
+ENTRY_KEY = ["pay_date"]
+LINE_KEY = ["pay_type", "department"]
 CHART = {"file": "chart-of-accounts.csv", "column": "Full name"}   # or None
-CATEGORY_COLUMN = "reporting_category"
-MAPPING = {"charge": ("4000 Sales", "Credit")}       # value -> (account, side when positive)
-DIMENSIONS = {"location": {"field": "Class", "map": {"LOC01": "Downtown"}, "blank": "Unassigned"}}
-FIXED_FIELDS = [("Accounts Receivable (A/R)", "Customer", "Stripe Payments")]   # (account or "all lines", field, value)
-OFFSET_ACCOUNT = "1099 Stripe Clearing"
-ENTRY_DATE = ("created", "max")
+CATEGORY_COLUMN = "pay_type"
+MAPPING = {"regular": ("6000 Wages", "Debit"), "overtime": ("6010 Overtime Wages", "Debit"), "bonus": ("6020 Bonuses", "Debit")}   # value -> (account, side when positive)
+DIMENSIONS = {"department": {"field": "Class", "map": {"OPS": "Operations"}, "blank": "Unassigned"}}
+FIXED_FIELDS = [("2150 Wages Payable", "Vendor", "ADP")]   # (account or "all lines", field, value)
+OFFSET_ACCOUNT = "2150 Wages Payable"
+ENTRY_DATE = ("pay_date", "max")
 ```
+
+The names above are an example. Take every value from the contract, never from this block.
 
 If the contract changes, regenerate the script. Never let the two drift apart.
 

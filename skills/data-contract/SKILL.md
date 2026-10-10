@@ -15,30 +15,30 @@ A data contract states, in fixed slots, exactly how rows of one source file beco
 
 | Term | Definition | Example |
 |---|---|---|
-| **Source grain** | What one row of the source file represents | One Stripe balance transaction |
-| **Row key** | Column(s) that uniquely identify a source row | `id` |
-| **Scope** | Which source rows this branch uses | `type` in (`charge`, `refund`, `stripe_fee`) |
-| **Exclusion** | Rows in the file but out of scope, each with a reason; still counted | `type` = `payout`: posted by bank deposit |
-| **Measure** | The numeric column that is totaled, and its sign convention | `net`; positive increases Stripe balance |
-| **Entry key** | Column(s) whose distinct values make one entry | `payout_id` |
-| **Line key** | Column(s) whose distinct values make one line within an entry | `reporting_category`, `location` |
-| **Output grain** | What one output line represents; always entry key + line key | One line per payout × category × location |
+| **Source grain** | What one row of the source file represents | One processor balance transaction; one employee's pay line in a payroll register |
+| **Row key** | Column(s) that uniquely identify a source row | `id`; `employee_id` + `pay_date` |
+| **Scope** | Which source rows this branch uses | `type` in (`charge`, `refund`); `pay_type` in (`regular`, `overtime`) |
+| **Exclusion** | Rows in the file but out of scope, each with a reason; still counted | `type` = `payout`: posted from the bank feed; `pay_type` = `reimbursement`: paid through expense reports |
+| **Measure** | The numeric column that is totaled, and its sign convention | `net`; positive increases the processor balance. `gross_pay`; positive is wages earned |
+| **Entry key** | Column(s) whose distinct values make one entry | `payout_id`; `pay_date`; `statement_month` |
+| **Line key** | Column(s) whose distinct values make one line within an entry | `reporting_category`, `location`; `pay_type`, `department` |
+| **Output grain** | What one output line represents; always entry key + line key | One line per pay date × pay type × department |
 | **Rollup** | How the measure combines within a line, and when rounding happens | Sum; round to cents after summing |
 | **Chart of accounts** | A CSV of the user's accounts, exported from their bookkeeping app, and the column that holds each account's name | `chart-of-accounts.csv`, column `Full name` |
 | **Category column** | The source column that decides the account | `reporting_category` |
-| **Mapping** | Category value → account and side; covers every value in scope | `charge` → 4000 Sales, credit |
-| **Dimension** | A source column carried to the ledger as a tag; never changes the account | `location` → QBO Class |
+| **Mapping** | Category value → account and side; covers every value in scope | `charge` → 4000 Sales, credit; `overtime` → 6010 Overtime Wages, debit |
+| **Dimension** | A source column carried to the ledger as a tag; never changes the account | `location` → QBO Class; `department` → QBO Class |
 | **Dimension mapping** | Source value → ledger dimension value | `LOC01` → Class "Downtown" |
 | **Blank rule** | What happens when a category or dimension value is blank | Class "Unassigned" + flag |
-| **Fixed field** | A ledger field set to one value the user chose, on the lines of one account or on all lines | Customer "Stripe Payments" on every Accounts Receivable (A/R) line |
-| **Offset line** | The line that balances each entry | 1099 Stripe Clearing |
-| **Control total** | The external number the output must agree with | Payout amount on the bank statement |
+| **Fixed field** | A ledger field set to one value the user chose, on the lines of one account or on all lines | Customer "Card Sales" on every Accounts Receivable (A/R) line; Vendor "ADP" on every payroll liability line |
+| **Offset line** | The line that balances each entry | 1099 Processor Clearing; 2150 Wages Payable |
+| **Control total** | The outside number the output must agree with, from an outside document | Deposit on the bank statement; balance on the lender statement; funding total on the payroll provider report |
 
-A **branch** is one named workflow with one contract (e.g. `stripe-payout-settlement`). Name it for what distinguishes it from similar workflows (`line-of-credit-draw` vs. `line-of-credit-paydown`).
+A **branch** is one named workflow with one contract (e.g. `stripe-payout-settlement`, `semi-monthly-payroll`). Name it for what distinguishes it from similar workflows (`line-of-credit-draw` vs. `line-of-credit-paydown`).
 
 ## Distinctions
 
-1. **Source grain ≠ output grain.** "Group by payout" means nothing until the source grain is stated.
+1. **Source grain ≠ output grain.** "Group by pay date" means nothing until the source grain is stated.
 2. **Category ≠ dimension.** The category column picks the account. A dimension only tags the line.
 3. **Every dimension is in the line key.** Otherwise the rollup merges dimension values and the tag is lost.
 4. **QBO Class ≠ QBO Location.** Two separate QuickBooks Online fields. Ask which one a column maps to.

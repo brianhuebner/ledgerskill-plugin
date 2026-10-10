@@ -22,7 +22,7 @@ Ask at most 4 numbered questions, each with a recommended answer based on the pr
 1. What is this file?
 2. What period does it cover, and is it complete?
 3. What will it be imported as? (Journal Entry by default)
-4. What should the result agree with? (a bank deposit, lender statement, payout report…)
+4. What should the result agree with? (a bank statement deposit, a lender statement, a payroll provider report, a vendor statement, a POS Z-report…)
 
 Avoid the words "branch", "grain", "contract" and "provenance" in this round. A reply of "use your recommendations" accepts every recommended answer.
 
@@ -36,7 +36,7 @@ Ask only the questions whose prerequisites are settled, numbered, each with a re
 5. Entry key, line key, rollup, entry date.
 6. Mapping: every category value in scope gets an account and a side. When there is a chart, recommend only accounts from it, spelled exactly. If the user names an account that is not in the chart, say so and offer the closest accounts from it.
 7. Dimensions: for each low-cardinality text column the profile found, ask whether it goes to the ledger, which field, the value mapping and the blank rule.
-8. Fixed fields: ask whether any field should always have the same value, on one account's lines or on all lines. Recommend one when the mapping needs it: an Accounts Receivable or Accounts Payable line needs a Customer or Vendor name in QuickBooks. Accept fixed fields stated in plain words in any round, e.g. *"Use the customer 'Stripe Payments' for every A/R line."*
+8. Fixed fields: ask whether any field should always have the same value, on one account's lines or on all lines. Recommend one when the mapping needs it: an Accounts Receivable or Accounts Payable line needs a Customer or Vendor name in QuickBooks. Accept fixed fields stated in plain words in any round, e.g. *"Use the customer 'Card Sales' for every A/R line"* or *"Put vendor 'ADP' on the payroll liability lines."*
 9. Offset line and control total.
 10. Edge cases the profile found: negative groups, blanks, unparseable values, duplicate keys.
 

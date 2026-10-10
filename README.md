@@ -35,7 +35,7 @@ Nothing to export yet. Start Claude Code in an empty folder and run:
 /ledgerskill:grill-books
 ```
 
-The first command writes a sample Stripe export and a sample chart of accounts into the folder.
+The first command writes a sample Stripe export and a sample chart of accounts into the folder. Stripe is only the demo: the same steps work for a payroll register, a loan statement, a POS report, a bank feed or any other transaction file.
 
 When the questions come, reply `use your recommendations`. Answer yes when Claude offers to run it, then open `runs/` to see the import file.
 

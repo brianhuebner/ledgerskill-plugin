@@ -53,6 +53,7 @@ DIMENSIONS = {"department": {"field": "Class", "map": {"OPS": "Operations"}, "bl
 FIXED_FIELDS = [("2150 Wages Payable", "Vendor", "ADP")]   # (account or "all lines", field, value)
 OFFSET_ACCOUNT = "2150 Wages Payable"   # None when the layout is not balanced
 ENTRY_DATE = ("pay_date", "max")
+CURRENCY_COLUMN = None   # the source column that holds the currency, when the file has one
 LAYOUT = {
     "name": "saasant-journal-entry",
     "columns": ["Journal No", "Journal Date", "Memo", "Account", "Amount", "Description", "Name",
@@ -89,6 +90,7 @@ Every processing script runs all of these and prints one line per check, `PASS`,
 11. **Entry numbers:** every entry has one entry number, no two entries share one, and each is within the layout's maximum length.
 12. **Amount style:** when signed, each entry's amounts sum to 0.00; when positive only, no line amount is below zero.
 13. **Required columns:** every column in the layout's `required` list is non-blank on every `import.csv` line.
+14. **One currency** (when the file has a currency column): the used rows hold one currency value. More than one is a FAIL that lists each value with its rows.
 
 A WARN does not stop the run. If any check fails, the script prints every failure and exits with status 1. It still writes its run folder with `checks-<run id>.txt` and `detail.csv`, but no `import.csv`. The script never "fixes" data to pass.
 

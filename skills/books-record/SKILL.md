@@ -13,7 +13,7 @@ The plugin leaves a written record of every workflow it sets up and every run it
 | `decisions/D-NNNN-<slug>.md` | Decision memo | When the user accepts the offer | Never, except `status` and `replaced_by` when a new memo replaces it |
 | `branches/<branch>.md` | Contract, with a header | End of a grill | Only when the user changes the contract; `version` rises by one each time |
 | `branches/<branch>.py` | Script | When the contract is written or changed | Regenerated when the contract changes |
-| `branches/<branch>.procedure.md` | Procedure summary | End of the first grill | Rows appended to its Runs table; nothing else |
+| `branches/<branch>.procedure.md` | Procedure summary | End of the first grill | Rows appended to its Runs table and values to its Values seen list; nothing else |
 | `branches/archive/<branch>.v<N>.md` and `.py` | An earlier contract and its script | Before the contract changes | Never |
 | `to_be_processed/` | The user's inbox: source files waiting for a run | By the user | Claude moves a file out after a passing run |
 | `complete/<period>/<branch>-<run id>/` | One run: `import.csv`, `detail.csv`, `checks-<run id>.txt`, and the source file after a passing run | Each run, by the script; the source file by Claude | Never |
@@ -66,6 +66,9 @@ Set up: <YYYY-MM-DD>. Contract version: <N>.
 ## 2. Profile facts
 <Facts from the profiling script: columns used, row count, distinct values of the scope,
 category and dimension columns with counts, amount totals. Copied from script output.>
+
+Values seen:
+- `<column>`: `<value>`, `<value>`, …   (one line per line-key, dimension and code-like entry-key column)
 
 ## 3. Decisions
 | Question | Answer | User's words |

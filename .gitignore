@@ -27,3 +27,6 @@ wheels/
 .mcp.json
 .ripgreprc
 .claude/
+
+# Local Claude Code dev notes
+CLAUDE.md

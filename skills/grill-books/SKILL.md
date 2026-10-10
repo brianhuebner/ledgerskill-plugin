@@ -37,11 +37,13 @@ Ask only the questions whose prerequisites are settled, numbered, each with a re
 3. Scope and exclusions (every distinct value of the scope column is either in scope or excluded with a reason).
 4. Measure and its sign.
 5. Entry key, line key, rollup, entry date.
-6. Mapping: every category value in scope gets an account and a side. When there is a chart, recommend only accounts from it, spelled exactly. If the user names an account that is not in the chart, say so and offer the closest accounts from it.
+6. Mapping: every category value in scope gets an account and a side. When there is a chart, recommend only accounts from it, spelled exactly. If the user names an account that is not in the chart, say so and offer the closest accounts from it. When the layout's line names are not accounts (an invoice's products and services, for example), recommend names from the list the layout names instead; ask once for an export of that list, which the user may `skip`, as with the chart.
 7. Dimensions: for each low-cardinality text column the profile found, ask whether it goes to the ledger, which field, the value mapping and the blank rule.
 8. Fixed fields: ask whether any field should always have the same value, on one account's lines or on all lines. Recommend one when the mapping needs it: an Accounts Receivable or Accounts Payable line needs a Customer or Vendor name in QuickBooks. Accept fixed fields stated in plain words in any round, e.g. *"Use the customer 'Card Sales' for every A/R line"* or *"Put vendor 'ADP' on the payroll liability lines."*
 9. Offset line and control total.
 10. Edge cases the profile found: negative groups, blanks, unparseable values, duplicate keys.
+
+Every required column of the import layout that the contract does not fill yet is a question, with a recommended answer. When the layout is not balanced, the offset line is None and is not asked about.
 
 When an answer conflicts with the data, say so using numbers from a script, e.g. *"2 rows have no `location`, totaling $305.80. Where do they go?"* Run a script to get those numbers.
 
@@ -56,8 +58,8 @@ Ask: "Want me to run it now and produce the import file?" If yes:
 1. Write `branches/<branch>.py` from the contract, following the `scripted-arithmetic` rules (constants block, all required checks, all three outputs).
 2. Print the echo lines.
 3. Run the script on the source file, with the period taken from the answer to Round 1.
-4. Report the run ID, the run folder and the result of every check.
-5. If every check passed, move the source file into the run folder as `books-record` describes. If any check failed, show the failures and ask how to resolve them. Do not change data or checks to make them pass.
+4. Report the run ID, the run folder and the result of every check. If any check failed, show the failures and ask how to resolve them. Do not change data or checks to make them pass.
+5. If every check passed, move the source file into the run folder as `books-record` describes.
 
 ## 7. Write the record
 Whether or not the user ran it, write `branches/<branch>.procedure.md` from the `books-record` template: the profile facts, every decision from the rounds with the user's words quoted, and one Runs row if it ran. Create or add to `BOOKS-CONTEXT.md` with the facts from the read-back, and set the contract header's `facts:` when the file exists. Write each decision memo the user accepted and list its ID in the header's `decisions:`. Tell the user in one line that the procedure summary is saved, and give its path.

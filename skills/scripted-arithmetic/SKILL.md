@@ -46,11 +46,12 @@ MEASURE = "gross_pay"
 ENTRY_KEY = ["pay_date"]
 LINE_KEY = ["pay_type", "department"]
 CHART = {"file": "chart-of-accounts.csv", "column": "Full name"}   # or None
+NAME_LIST = None   # {"file": ..., "column": ...} when the layout's line names are not accounts
 CATEGORY_COLUMN = "pay_type"
 MAPPING = {"regular": ("6000 Wages", "Debit"), "overtime": ("6010 Overtime Wages", "Debit"), "bonus": ("6020 Bonuses", "Debit")}   # value -> (account, side when positive)
 DIMENSIONS = {"department": {"field": "Class", "map": {"OPS": "Operations"}, "blank": "Unassigned"}}
 FIXED_FIELDS = [("2150 Wages Payable", "Vendor", "ADP")]   # (account or "all lines", field, value)
-OFFSET_ACCOUNT = "2150 Wages Payable"
+OFFSET_ACCOUNT = "2150 Wages Payable"   # None when the layout is not balanced
 ENTRY_DATE = ("pay_date", "max")
 LAYOUT = {
     "name": "saasant-journal-entry",
@@ -58,7 +59,10 @@ LAYOUT = {
                 "Location", "Class", "Currency Code", "Exchange Rate", "Is Adjustment"],
     "fill": {"Journal No": "entry number", "Journal Date": "entry date", "Memo": "memo", "Account": "account",
              "Amount": "signed amount", "Name": "fixed field Vendor", "Class": "dimension department"},   # unlisted columns are blank
-    "amount_style": "signed",        # or "debit-credit"
+    "line_names": "account",         # or "product-service", or another list
+    "balanced": True,
+    "required": [],                  # columns that must be non-blank on every line
+    "amount_style": "signed",        # or "debit-credit" or "positive only"
     "date_format": "%m/%d/%Y",
     "entry_number_max": 21,          # or None
 }
@@ -77,13 +81,14 @@ Every processing script runs all of these and prints one line per check, `PASS`,
 3. **Mapped:** every category value in scope has a mapping. An unmapped value is a FAIL that lists the value and its rows.
 4. **Dimensions in line key:** every dimension column is in `LINE_KEY`.
 5. **Amount conservation:** the signed sum of the measure over used rows equals the signed sum of output lines before the offset.
-6. **Balance:** every entry's debits equal its credits, to the cent.
+6. **Balance** (when the layout is balanced): every entry's debits equal its credits, to the cent.
 7. **Control total** (when given): the output agrees with it per entry key, and any difference is shown.
-8. **Accounts in chart:** every account in `MAPPING`, `OFFSET_ACCOUNT` and `FIXED_FIELDS` appears exactly in the chart's account column. A missing account is a FAIL that names it. When `CHART` is None, this check is a WARN: "account names not checked".
+8. **Names in list:** every line name in `MAPPING` and `OFFSET_ACCOUNT` appears exactly in the list the layout names: the chart's account column when line names are accounts, else `NAME_LIST`. Every account in `FIXED_FIELDS` appears exactly in the chart. A missing name is a FAIL that names it. When the list is None, this check is a WARN: "names not checked".
 9. **Fixed fields used:** every fixed field whose account is not "all lines" lands on at least one output line. A fixed field that lands on no line is a WARN that names it.
 10. **Run ID on every line:** every `import.csv` line's memo contains this run's ID.
 11. **Entry numbers:** every entry has one entry number, no two entries share one, and each is within the layout's maximum length.
-12. **Signed amounts net to zero** (when the amount style is signed): each entry's amounts sum to 0.00.
+12. **Amount style:** when signed, each entry's amounts sum to 0.00; when positive only, no line amount is below zero.
+13. **Required columns:** every column in the layout's `required` list is non-blank on every `import.csv` line.
 
 A WARN does not stop the run. If any check fails, the script prints every failure and exits with status 1. It still writes its run folder with `checks-<run id>.txt` and `detail.csv`, but no `import.csv`. The script never "fixes" data to pass.
 

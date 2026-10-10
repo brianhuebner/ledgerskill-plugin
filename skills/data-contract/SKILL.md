@@ -44,7 +44,7 @@ A **branch** is one named workflow with one contract (e.g. `stripe-payout-settle
 3. **Every dimension is in the line key.** Otherwise the rollup merges dimension values and the tag is lost.
 4. **QBO Class ≠ QBO Location.** Two separate QuickBooks Online fields. Ask which one a column maps to.
 5. **Excluded ≠ unmapped.** Excluded rows are left out on purpose, with a reason. An unmapped value stops the run and becomes a question. There is no catch-all "other" account.
-6. **Accounts come from the chart.** When there is a chart of accounts, every account in the mapping, the offset line and the fixed fields is spelled exactly as in its account column. An account not in the chart is a question, never a new account.
+6. **Names come from a list.** When there is a chart of accounts, every account in the mapping, the offset line and the fixed fields is spelled exactly as in its account column. When the layout's line names are something else, such as products and services, they are spelled exactly as in that list. A name not in its list is a question, never a new name.
 7. **Dimension ≠ fixed field.** A dimension's value comes from a source column and can differ row to row. A fixed field's value is a constant the user stated; it is not read from the source.
 
 ## Slot template
@@ -81,6 +81,7 @@ Rollup:        sum `<col>`; round to cents after summing
 
 ## Mapping (category column: `<col>`)
 Chart of accounts: `<file>`, column `<col>`   (or None — account names not checked)
+Name list:    `<file>`, column `<col>`   (only when the layout's line names are not accounts; or None — names not checked)
 | Value | Account | Side when positive |
 |---|---|---|
 | `<value>` | <code name> | Debit / Credit |
@@ -98,7 +99,7 @@ Unmapped value → stop and ask.
 | <account, or "all lines"> | <field> | "<value>" |
 (or None)
 
-Offset line:   <account>, one per entry
+Offset line:   <account>, one per entry   (or None, when the layout is not balanced)
 Control total: <external number>, per <entry key>   (or None)
 Entry date:    `<col>` (<which value within the entry: max / min / first>)
 
@@ -107,7 +108,10 @@ Tool:          <what imports the file, and what it imports as>
 | Column | Filled with |
 |---|---|
 | `<column, spelled exactly>` | <entry number / entry date / account / debit / credit / signed amount / memo / a dimension / a fixed field / blank> |
-Amount style:  <debit-credit: two positive columns, one filled | signed: one column, debit positive, credit negative>
+Line names:   <account | product-service | another list>: what the Mapping's account column names
+Balanced:     <yes: every entry balances, offset line required | no: offset line None>
+Required columns: `<column>`, …   (or None): must be non-blank on every line
+Amount style:  <debit-credit: two positive columns, one filled | signed: one column, debit positive, credit negative | positive only>
 Date format:   <e.g. YYYY-MM-DD, MM/DD/YYYY>
 Entry number:  <how it is built>; at most <N> characters (or no limit); `-2`, `-3` appended when two entries would share one
 Memo:          <what it holds>, ending `<entry key value> · run <run id>`
@@ -126,7 +130,9 @@ Fill the `## Import layout` section in this order of preference:
 2. **A built-in layout**, when the user names its tool. Copy its block below into the contract.
 3. **`plain`**, when neither applies.
 
-Add a new built-in by writing another filled block here in the same form.
+A layout's properties (Line names, Balanced, Required columns, Amount style) decide which questions the grill asks and which checks apply. Under positive only, a group that sums negative becomes a question.
+
+Add a new built-in, such as a bill or sales receipt import, by writing another filled block here in the same form. It needs no other change to the skills.
 
 ### `plain`
 ```markdown
@@ -142,6 +148,9 @@ Tool:          Any journal entry import that maps columns once
 | one column per dimension field, named for the field | that dimension |
 | one column per fixed field, named for the field | that fixed field, blank on lines it does not apply to |
 | `memo` | memo |
+Line names:   account
+Balanced:     yes
+Required columns: None
 Amount style:  debit-credit
 Date format:   YYYY-MM-DD
 Entry number:  the entry key value (columns joined with `-`); no limit
@@ -169,11 +178,46 @@ Tool:          SaasAnt Transactions → QuickBooks Online, Journal Entry
 | `Currency Code` | blank |
 | `Exchange Rate` | blank |
 | `Is Adjustment` | blank |
+Line names:   account
+Balanced:     yes
+Required columns: None
 Amount style:  signed
 Date format:   MM/DD/YYYY
 Entry number:  the entry key value if it fits, else a short prefix the user chooses plus the entry date as YYYYMMDD; at most 21 characters; `-2`, `-3` appended when two entries would share one
 Memo:          `<entry key value> · run <run id>` on every line; when too long, shorten the entry key text and keep the run ID
 Name column:   `Name`
+Header quirks: None
+```
+
+### `saasant-invoice`
+SaasAnt Transactions importing into QuickBooks Online as Invoices. Each entry is one invoice; each line names a product or service.
+```markdown
+## Import layout
+Tool:          SaasAnt Transactions → QuickBooks Online, Invoice
+| Column | Filled with |
+|---|---|
+| `Invoice No` | entry number |
+| `Customer` | the Customer fixed field |
+| `Invoice Date` | entry date |
+| `Due Date` | blank |
+| `Terms` | blank |
+| `Location` | the dimension mapped to Location; else blank |
+| `Memo` | memo |
+| `Product/Service` | line name |
+| `Product/Service Description` | blank |
+| `Product/Service Quantity` | blank |
+| `Product/Service Rate` | blank |
+| `Product/Service Amount` | amount |
+| `Product/Service Class` | the dimension mapped to Class; else blank |
+| `Currency Code` | blank |
+Line names:   product-service
+Balanced:     no
+Required columns: `Customer`
+Amount style:  positive only
+Date format:   MM/DD/YYYY
+Entry number:  the entry key value if it fits, else a short prefix the user chooses plus the entry date as YYYYMMDD; at most 21 characters; `-2`, `-3` appended when two entries would share one
+Memo:          `<entry key value> · run <run id>`; when too long, shorten the entry key text and keep the run ID
+Name column:   `Customer`
 Header quirks: None
 ```
 

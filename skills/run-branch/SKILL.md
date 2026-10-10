@@ -6,6 +6,8 @@ disable-model-invocation: true
 
 Load the `ledgerskill:data-contract`, `ledgerskill:scripted-arithmetic` and `ledgerskill:books-record` skills first, and follow them throughout.
 
+If `BOOKS-CONTEXT.md` exists, read it first and use its facts for every recommended answer.
+
 If no source file was given, ask for one and stop. If `branches/` has no branch files, tell the user to run `/ledgerskill:grill-books` first and stop.
 
 1. **Profile** the file with a script that follows the `scripted-arithmetic` rules.
@@ -15,4 +17,4 @@ If no source file was given, ask for one and stop. If `branches/` has no branch 
 5. **Echo.** Print the two echo lines from the `data-contract` skill.
 6. **Run** `branches/<branch>.py` on the file, writing to `runs/<period>/<branch>/`.
 7. **Report** every check line. If any check failed, show the failures and ask how to resolve them. Never change data or checks to make them pass.
-8. **Record.** Append one row to the Runs table of `branches/<branch>.procedure.md`: when, the period, what changed in the contract in step 4 (or "no change"), and the outcome. Append only; change nothing else in the file.
+8. **Record.** Append one row to the Runs table of `branches/<branch>.procedure.md`: when, the period, what changed in the contract in step 4 (or "no change"), and the outcome. Append only; change nothing else in the file. Add any durable fact learned in this run to `BOOKS-CONTEXT.md` as `books-record` describes.

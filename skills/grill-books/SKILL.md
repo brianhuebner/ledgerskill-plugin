@@ -7,6 +7,8 @@ disable-model-invocation: true
 Load the `ledgerskill:data-contract`, `ledgerskill:scripted-arithmetic` and `ledgerskill:books-record` skills first, and follow them throughout. Facts come from the file through scripts. Only decisions come from the user.
 
 ## 0. Find the files
+If `BOOKS-CONTEXT.md` exists, read it first. Use its facts to set recommended answers, and do not ask a question it already answers.
+
 You need one source file and, ideally, a chart of accounts.
 
 - If no source file was given, list the CSV files in the current folder. Propose which is the source file and which is the chart of accounts (a chart has one row per account and columns such as account name and type), and ask the user to confirm. If there are no CSV files, ask for a source file and stop.
@@ -43,7 +45,7 @@ Ask only the questions whose prerequisites are settled, numbered, each with a re
 When an answer conflicts with the data, say so using numbers from a script, e.g. *"2 rows have no `location`, totaling $305.80. Where do they go?"* Run a script to get those numbers.
 
 ## 4. Read-back
-Read the filled slots back to the user, slot by slot, including the chart of accounts and fixed fields, and get explicit confirmation. Change anything they correct.
+Read the filled slots back to the user, slot by slot, including the chart of accounts and fixed fields, and get explicit confirmation. Change anything they correct. End with one line naming the durable facts learned in this grill that pass the `books-record` test: *"I'll remember: the rental system's day closes at 6 PM Mountain."* Leave it out when there are none.
 
 ## 5. Write
 Write `branches/<branch>.md` in the user's working folder using the `data-contract` slot template exactly, header included, with one worked example built by running a script on 3–4 real rows.
@@ -56,4 +58,4 @@ Ask: "Want me to run it now and produce the import file?" If yes:
 4. Report the result of every check. If any check failed, show the failures and ask how to resolve them. Do not change data or checks to make them pass.
 
 ## 7. Write the record
-Whether or not the user ran it, write `branches/<branch>.procedure.md` from the `books-record` template: the profile facts, every decision from the rounds with the user's words quoted, and one Runs row if it ran. Tell the user in one line that the procedure summary is saved, and give its path.
+Whether or not the user ran it, write `branches/<branch>.procedure.md` from the `books-record` template: the profile facts, every decision from the rounds with the user's words quoted, and one Runs row if it ran. Create or add to `BOOKS-CONTEXT.md` with the facts from the read-back, and set the contract header's `facts:` when the file exists. Tell the user in one line that the procedure summary is saved, and give its path.

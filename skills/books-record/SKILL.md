@@ -11,10 +11,11 @@ The plugin leaves a written record of every workflow it sets up and every run it
 |---|---|---|---|
 | `BOOKS-CONTEXT.md` | Client facts | When the first durable fact is learned | New lines appended as facts are learned |
 | `decisions/D-NNNN-<slug>.md` | Decision memo | When the user accepts the offer | Never, except `status` and `replaced_by` when a new memo replaces it |
-| `branches/<branch>.md` | Contract, with a header | End of a grill | Only when the user changes the contract |
+| `branches/<branch>.md` | Contract, with a header | End of a grill | Only when the user changes the contract; `version` rises by one each time |
 | `branches/<branch>.py` | Script | When the contract is written or changed | Regenerated when the contract changes |
 | `branches/<branch>.procedure.md` | Procedure summary | End of the first grill | Rows appended to its Runs table; nothing else |
-| `runs/<period>/<branch>/` | One run's outputs | Each run | Never |
+| `branches/archive/<branch>.v<N>.md` and `.py` | An earlier contract and its script | Before the contract changes | Never |
+| `runs/<period>/<branch>-<run id>/` | One run: `import.csv`, `detail.csv`, `checks-<run id>.txt` | Each run, by the script | Never |
 
 ## Rules
 
@@ -32,7 +33,7 @@ The header at the top of `branches/<branch>.md` (template in `ledgerskill:data-c
 | `type` | `contract` |
 | `id` | The branch name |
 | `version` | `1` when created |
-| `supersedes` | The version this one replaced; empty for version 1 |
+| `supersedes` | The version this one replaced (`version` − 1); empty for version 1 |
 | `chart` | The chart of accounts file name; empty when None |
 | `layout` | The import layout name; empty until one is set |
 | `facts` | `BOOKS-CONTEXT.md` once it exists; empty before |
@@ -68,10 +69,11 @@ return to zero when the outside record arrives.>
 ## 5. Runs
 | Run | Period | What changed | Outcome |
 |---|---|---|---|
-| <YYYY-MM-DD HH:MM> | <period> | <"first run", or the contract change> | <pass / fail, entries, total> |
+| <run ID> | <period> | <"first run", or the contract change> | <pass / fail, entries, total> |
 
 ## 6. Before importing
-- Open the run's checks file and confirm every check passed; read each WARN.
+- Open the run's `checks-<run id>.txt` and confirm every check passed; read each WARN.
+- Import only one run per period. Every imported line's memo carries its run ID, which names the run folder.
 - Compare the result with <the outside document named by the control total>.
 - Import `import.csv` with <the import tool>.
 

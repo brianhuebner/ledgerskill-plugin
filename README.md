@@ -115,17 +115,17 @@ It picks the matching workflow, stops to ask only about anything new in the file
 
 ### Output
 
-Each run writes to `runs/<period>/<branch>/`:
+Each run gets a run ID, the time it started, such as `LS-20260905-081200`, and writes to `runs/<period>/<branch>-<run id>/`:
 
 | File | Contents |
 |---|---|
-| `import.csv` | Balanced journal lines, ready to import |
+| `import.csv` | Balanced journal lines, ready to import; every memo ends with the run ID |
 | `detail.csv` | One row per source row: used or excluded, why, and which import line it feeds |
-| `checks.txt` | Source file hash and the result of every tie-out check |
+| `checks-<run id>.txt` | The run record: run ID, contract version, hashes of the source, chart, contract and script, then the result of every tie-out check |
 
 If a check fails, no `import.csv` is written. Claude shows you the failures and asks how to resolve them. It never changes data or loosens a check to make it pass.
 
-Runs are never overwritten. Running the same period again writes to `runs/<period>/<branch>-2/`, then `-3`, so the files you imported stay as the record of what you imported.
+Runs are never overwritten. Running the same period again gets a new run ID and a new folder, so the files you imported stay as the record of what you imported. To trace an entry in your books, search for the run ID in its memo: it names the one folder that produced it. When a contract changes, the earlier version and its script are kept in `branches/archive/`.
 
 ## What it does on your computer
 

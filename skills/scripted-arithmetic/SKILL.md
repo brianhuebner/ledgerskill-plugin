@@ -37,6 +37,7 @@ A script built from a contract starts with a constants block that mirrors the co
 ```python
 # --- Contract: branches/<branch>.md ---
 BRANCH = "semi-monthly-payroll"
+CONTRACT = {"file": "branches/semi-monthly-payroll.md", "version": 1}   # version from the contract header
 ROW_KEY = ["employee_id", "pay_date"]
 SCOPE = {"column": "pay_type", "values": ["regular", "overtime", "bonus"]}
 EXCLUSIONS = {"reimbursement": "paid through expense reports"}   # value -> reason
@@ -69,16 +70,50 @@ Every processing script runs all of these and prints one line per check, `PASS`,
 7. **Control total** (when given): the output agrees with it per entry key, and any difference is shown.
 8. **Accounts in chart:** every account in `MAPPING`, `OFFSET_ACCOUNT` and `FIXED_FIELDS` appears exactly in the chart's account column. A missing account is a FAIL that names it. When `CHART` is None, this check is a WARN: "account names not checked".
 9. **Fixed fields used:** every fixed field whose account is not "all lines" lands on at least one output line. A fixed field that lands on no line is a WARN that names it.
+10. **Run ID on every line:** every `import.csv` line's memo contains this run's ID.
 
-A WARN does not stop the run. If any check fails, the script prints every failure and exits with status 1. It still writes `checks.txt` but writes no `import.csv`. The script never "fixes" data to pass.
+A WARN does not stop the run. If any check fails, the script prints every failure and exits with status 1. It still writes its run folder with `checks-<run id>.txt` and `detail.csv`, but no `import.csv`. The script never "fixes" data to pass.
+
+## Run ID
+
+Every run of a processing script, passing or failing, gets a run ID: the time the run started, to the second, in the computer's local time. Copy this block exactly:
+
+```python
+def run_id(started):
+    return "LS-" + started.strftime("%Y%m%d-%H%M%S")
+```
+
+Set `started = datetime.now().replace(microsecond=0)` once, when the run starts. The ID does not say what produced the run; the hashes in the run record do.
 
 ## Outputs
 
-Write to `runs/<period>/<branch>/`. Never overwrite an earlier run: if that folder exists, use `runs/<period>/<branch>-2/`, then `-3`, and so on. Print the folder used. An earlier run may already have been imported, and its files are the record of what was.
+Write to a new folder, `runs/<period>/<branch>-<run id>/`. If a folder with that name exists, add one second to `started` and take the next ID, until the folder is new. Never write into an existing folder. Print the run ID and the folder. An earlier run may already have been imported, and its files are the record of what was.
 
-- `import.csv`: balanced journal lines with columns `entry`, `date`, `account`, `debit`, `credit`, one column per dimension field, one column per fixed field (blank on lines it does not apply to), `memo`. Debit and credit are positive and two-decimal; exactly one is filled.
+- `import.csv`: balanced journal lines with columns `entry`, `date`, `account`, `debit`, `credit`, one column per dimension field, one column per fixed field (blank on lines it does not apply to), `memo`. Debit and credit are positive and two-decimal; exactly one is filled. Every memo ends with `<entry key value> · run <run id>`, e.g. `po_A1 · run LS-20260905-081200` or `2026-09-15 · run LS-20260916-140503`. If a memo must be shortened, shorten the other text and keep the run ID.
 - `detail.csv`: one row per source row, with `row`, the row key, `status` (`used` / `excluded`), `reason`, `account`, `amount`, and `import_line` (the `import.csv` line it feeds, blank if excluded).
-- `checks.txt`: the header (source file name and SHA-256, chart file name and SHA-256 or "no chart", branch, run time) followed by the check lines.
+- `checks-<run id>.txt`: the run record. A YAML header, then one line per check, so the file identifies itself wherever it is attached. Every key is present; a key with no value is written empty.
+
+```yaml
+---
+type: run
+id: <run id>
+branch: <branch>
+contract_version: <CONTRACT version>
+contract_sha256: <SHA-256 of the contract file>
+script_sha256: <SHA-256 of this script>
+source: <source file name>
+source_sha256: <SHA-256>
+chart: <chart file name, or empty>
+chart_sha256: <SHA-256, or empty>
+period: <period>
+control: <same-file | untied>
+control_source: <where the control total came from, or empty>
+result: <pass | fail>
+run_at: <started, as YYYY-MM-DDTHH:MM:SS>
+---
+```
+
+`control` is `same-file` when the control total comes from the source file itself and `untied` when the contract has none.
 
 ## Profiling scripts
 

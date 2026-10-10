@@ -55,7 +55,7 @@ Ask: "Want me to run it now and produce the import file?" If yes:
 1. Write `branches/<branch>.py` from the contract, following the `scripted-arithmetic` rules (constants block, all required checks, all three outputs).
 2. Print the echo lines.
 3. Run the script on the source file, with the period taken from the answer to Round 1.
-4. Report the result of every check. If any check failed, show the failures and ask how to resolve them. Do not change data or checks to make them pass.
+4. Report the run ID, the run folder and the result of every check. If any check failed, show the failures and ask how to resolve them. Do not change data or checks to make them pass.
 
 ## 7. Write the record
 Whether or not the user ran it, write `branches/<branch>.procedure.md` from the `books-record` template: the profile facts, every decision from the rounds with the user's words quoted, and one Runs row if it ran. Create or add to `BOOKS-CONTEXT.md` with the facts from the read-back, and set the contract header's `facts:` when the file exists. Write each decision memo the user accepted and list its ID in the header's `decisions:`. Tell the user in one line that the procedure summary is saved, and give its path.

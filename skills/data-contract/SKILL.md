@@ -1,6 +1,6 @@
 ---
 name: data-contract
-description: Use when describing, writing, reading or checking how a financial source file becomes ledger lines — grain, keys, scope, mapping, dimensions, offset or control totals. Use whenever a branch file in branches/ is created, edited or followed.
+description: Use when describing, writing, reading or checking how a financial source file becomes ledger lines — grain, keys, scope, mapping, dimensions, offset, control totals or the import layout. Use whenever a branch file in branches/ is created, edited or followed.
 ---
 
 Every statement about how source rows become output lines uses the terms and slots below, and only those terms.
@@ -33,6 +33,7 @@ A data contract states, in fixed slots, exactly how rows of one source file beco
 | **Fixed field** | A ledger field set to one value the user chose, on the lines of one account or on all lines | Customer "Card Sales" on every Accounts Receivable (A/R) line; Vendor "ADP" on every payroll liability line |
 | **Offset line** | The line that balances each entry | 1099 Processor Clearing; 2150 Wages Payable |
 | **Control total** | The outside number the output must agree with, from an outside document | Deposit on the bank statement; balance on the lender statement; funding total on the payroll provider report |
+| **Import layout** | The columns and formats of the file the user's import tool reads | `plain`; `saasant-journal-entry`; the header row of a Xero or NetSuite import template |
 
 A **branch** is one named workflow with one contract (e.g. `stripe-payout-settlement`, `semi-monthly-payroll`). Name it for what distinguishes it from similar workflows (`line-of-credit-draw` vs. `line-of-credit-paydown`).
 
@@ -57,7 +58,7 @@ id: <branch>
 version: 1
 supersedes:
 chart: <chart file name, or empty>
-layout:
+layout: <layout name, or the template file name>
 facts:
 decisions:
 procedure: <branch>.procedure.md
@@ -101,8 +102,79 @@ Offset line:   <account>, one per entry
 Control total: <external number>, per <entry key>   (or None)
 Entry date:    `<col>` (<which value within the entry: max / min / first>)
 
+## Import layout
+Tool:          <what imports the file, and what it imports as>
+| Column | Filled with |
+|---|---|
+| `<column, spelled exactly>` | <entry number / entry date / account / debit / credit / signed amount / memo / a dimension / a fixed field / blank> |
+Amount style:  <debit-credit: two positive columns, one filled | signed: one column, debit positive, credit negative>
+Date format:   <e.g. YYYY-MM-DD, MM/DD/YYYY>
+Entry number:  <how it is built>; at most <N> characters (or no limit); `-2`, `-3` appended when two entries would share one
+Memo:          <what it holds>, ending `<entry key value> · run <run id>`
+Name column:   `<column>` carries the <Customer / Vendor / Employee> fixed field   (or None)
+Header quirks: <what was copied exactly from a template, such as stray spaces>   (or None)
+
 ## Example
 <3–4 source rows, then the output lines they become>
+```
+
+## Built-in layouts
+
+Fill the `## Import layout` section in this order of preference:
+
+1. **A template file in the books folder** from the user's import tool (Xero, NetSuite, Sage, QuickBooks native, SaasAnt, any other). It always wins. Read its header row and copy every column name exactly, including stray spaces and capitals, in its order. Fill the other slots from the user's answers.
+2. **A built-in layout**, when the user names its tool. Copy its block below into the contract.
+3. **`plain`**, when neither applies.
+
+Add a new built-in by writing another filled block here in the same form.
+
+### `plain`
+```markdown
+## Import layout
+Tool:          Any journal entry import that maps columns once
+| Column | Filled with |
+|---|---|
+| `entry` | entry number |
+| `date` | entry date |
+| `account` | account |
+| `debit` | debit |
+| `credit` | credit |
+| one column per dimension field, named for the field | that dimension |
+| one column per fixed field, named for the field | that fixed field, blank on lines it does not apply to |
+| `memo` | memo |
+Amount style:  debit-credit
+Date format:   YYYY-MM-DD
+Entry number:  the entry key value (columns joined with `-`); no limit
+Memo:          `<entry key value> · run <run id>`
+Name column:   None
+Header quirks: None
+```
+
+### `saasant-journal-entry`
+SaasAnt Transactions importing into QuickBooks Online as Journal Entries.
+```markdown
+## Import layout
+Tool:          SaasAnt Transactions → QuickBooks Online, Journal Entry
+| Column | Filled with |
+|---|---|
+| `Journal No` | entry number |
+| `Journal Date` | entry date |
+| `Memo` | memo |
+| `Account` | account |
+| `Amount` | signed amount |
+| `Description` | blank |
+| `Name` | the Customer, Vendor or Employee fixed field; blank on other lines |
+| `Location` | the dimension mapped to Location; else blank |
+| `Class` | the dimension mapped to Class; else blank |
+| `Currency Code` | blank |
+| `Exchange Rate` | blank |
+| `Is Adjustment` | blank |
+Amount style:  signed
+Date format:   MM/DD/YYYY
+Entry number:  the entry key value if it fits, else a short prefix the user chooses plus the entry date as YYYYMMDD; at most 21 characters; `-2`, `-3` appended when two entries would share one
+Memo:          `<entry key value> · run <run id>` on every line; when too long, shorten the entry key text and keep the run ID
+Name column:   `Name`
+Header quirks: None
 ```
 
 ## Writing rules

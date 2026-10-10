@@ -101,7 +101,13 @@ The two LOC01 charges are summed into one line, the row with no location goes to
 
 ### 6. Import it
 
-`import.csv` is plain journal lines: entry, date, account, debit, credit, one column per tag, and a memo. Bring it in with whatever you already use (your app's journal entry import, SaaSAnt or similar), and map the columns once.
+Claude asks in the first round what will import the file, and writes `import.csv` in that tool's layout:
+
+- **A sample file from your tool.** Drop a blank import template from your tool (Xero, NetSuite, Sage, QuickBooks, any other) into the books folder. Claude reads its header row and copies the column names exactly.
+- **A built-in layout.** `saasant-journal-entry` is SaasAnt Transactions' Journal Entry import into QuickBooks Online: one signed amount column, MM/DD/YYYY dates, journal numbers of 21 characters or fewer.
+- **Plain,** the default: entry, date, account, debit, credit, one column per tag, and a memo. Map the columns once in whatever you use.
+
+The tool and layout are saved to `BOOKS-CONTEXT.md`, so later grills don't ask again.
 
 ### Next period
 

@@ -52,6 +52,16 @@ DIMENSIONS = {"department": {"field": "Class", "map": {"OPS": "Operations"}, "bl
 FIXED_FIELDS = [("2150 Wages Payable", "Vendor", "ADP")]   # (account or "all lines", field, value)
 OFFSET_ACCOUNT = "2150 Wages Payable"
 ENTRY_DATE = ("pay_date", "max")
+LAYOUT = {
+    "name": "saasant-journal-entry",
+    "columns": ["Journal No", "Journal Date", "Memo", "Account", "Amount", "Description", "Name",
+                "Location", "Class", "Currency Code", "Exchange Rate", "Is Adjustment"],
+    "fill": {"Journal No": "entry number", "Journal Date": "entry date", "Memo": "memo", "Account": "account",
+             "Amount": "signed amount", "Name": "fixed field Vendor", "Class": "dimension department"},   # unlisted columns are blank
+    "amount_style": "signed",        # or "debit-credit"
+    "date_format": "%m/%d/%Y",
+    "entry_number_max": 21,          # or None
+}
 ```
 
 The names above are an example. Take every value from the contract, never from this block.
@@ -72,6 +82,8 @@ Every processing script runs all of these and prints one line per check, `PASS`,
 8. **Accounts in chart:** every account in `MAPPING`, `OFFSET_ACCOUNT` and `FIXED_FIELDS` appears exactly in the chart's account column. A missing account is a FAIL that names it. When `CHART` is None, this check is a WARN: "account names not checked".
 9. **Fixed fields used:** every fixed field whose account is not "all lines" lands on at least one output line. A fixed field that lands on no line is a WARN that names it.
 10. **Run ID on every line:** every `import.csv` line's memo contains this run's ID.
+11. **Entry numbers:** every entry has one entry number, no two entries share one, and each is within the layout's maximum length.
+12. **Signed amounts net to zero** (when the amount style is signed): each entry's amounts sum to 0.00.
 
 A WARN does not stop the run. If any check fails, the script prints every failure and exits with status 1. It still writes its run folder with `checks-<run id>.txt` and `detail.csv`, but no `import.csv`. The script never "fixes" data to pass.
 
@@ -90,7 +102,7 @@ Set `started = datetime.now().replace(microsecond=0)` once, when the run starts.
 
 Write to a new folder, `complete/<period>/<branch>-<run id>/`. If a folder with that name exists, add one second to `started` and take the next ID, until the folder is new. Never write into an existing folder. Print the run ID and the folder. An earlier run may already have been imported, and its files are the record of what was.
 
-- `import.csv`: balanced journal lines with columns `entry`, `date`, `account`, `debit`, `credit`, one column per dimension field, one column per fixed field (blank on lines it does not apply to), `memo`. Debit and credit are positive and two-decimal; exactly one is filled. Every memo ends with `<entry key value> · run <run id>`, e.g. `po_A1 · run LS-20260905-081200` or `2026-09-15 · run LS-20260916-140503`. If a memo must be shortened, shorten the other text and keep the run ID.
+- `import.csv`: balanced journal lines in the contract's import layout. `LAYOUT` sets the columns, their order and exact spelling, the amount style, the date format and the entry numbers. Amounts are two-decimal; under debit-credit both are positive and exactly one is filled; under signed, debit is positive and credit negative. Every memo ends with `<entry key value> · run <run id>`, e.g. `po_A1 · run LS-20260905-081200` or `2026-09-15 · run LS-20260916-140503`. If a memo must be shortened, shorten the other text and keep the run ID.
 - `detail.csv`: one row per source row, with `row`, the row key, `status` (`used` / `excluded`), `reason`, `account`, `amount`, and `import_line` (the `import.csv` line it feeds, blank if excluded).
 - `checks-<run id>.txt`: the run record. A YAML header, then one line per check, so the file identifies itself wherever it is attached. Every key is present; a key with no value is written empty.
 

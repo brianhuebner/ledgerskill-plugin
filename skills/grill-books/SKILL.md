@@ -12,6 +12,7 @@ If `BOOKS-CONTEXT.md` exists, read it first. Use its facts to set recommended an
 You need one source file and, ideally, a chart of accounts.
 
 - If no source file was given, list the CSV files in `to_be_processed/`, then in the current folder (see Source files in `books-record`). Propose which is the source file and which is the chart of accounts (a chart has one row per account and columns such as account name and type), and ask the user to confirm. If there are no CSV files, ask for a source file and stop.
+- Look also for an import template: a file from the user's import tool whose header row names its columns, with few or no data rows. Read only its header row. A template holds no client data.
 - If there is no chart of accounts, ask once: *"Do you have a chart of accounts export? In most bookkeeping apps it's on the Chart of Accounts page; save it as CSV into this folder. Or reply `skip` and I'll take account names from your answers, unchecked."* If the user skips, the contract's chart is None. Do not ask again.
 
 ## 1. Profile
@@ -23,7 +24,7 @@ If there is a chart, ask in Round 1 which column holds the account names to impo
 Ask at most 4 numbered questions, each with a recommended answer based on the profile:
 1. What is this file?
 2. What period does it cover, and is it complete?
-3. What will it be imported as? (Journal Entry by default)
+3. What will import this, and is there a sample file from that tool in the folder? Recommend, in order: the template found in step 0; a built-in layout from `data-contract` when the user names its tool; otherwise `plain`. Skip this question when `BOOKS-CONTEXT.md` already names the tool and layout.
 4. What should the result agree with? (a bank statement deposit, a lender statement, a payroll provider report, a vendor statement, a POS Z-report…)
 
 Avoid the words "branch", "grain", "contract" and "provenance" in this round. A reply of "use your recommendations" accepts every recommended answer.
@@ -45,7 +46,7 @@ Ask only the questions whose prerequisites are settled, numbered, each with a re
 When an answer conflicts with the data, say so using numbers from a script, e.g. *"2 rows have no `location`, totaling $305.80. Where do they go?"* Run a script to get those numbers.
 
 ## 4. Read-back
-Read the filled slots back to the user, slot by slot, including the chart of accounts and fixed fields, and get explicit confirmation. Change anything they correct. End with one line naming the durable facts learned in this grill that pass the `books-record` test: *"I'll remember: the rental system's day closes at 6 PM Mountain."* Leave it out when there are none. During the read-back, offer a decision memo for each answer that passes the `books-record` test, at most two, one line each.
+Read the filled slots back to the user, slot by slot, including the chart of accounts, fixed fields and import layout, and get explicit confirmation. Change anything they correct. End with one line naming the durable facts learned in this grill that pass the `books-record` test: *"I'll remember: the rental system's day closes at 6 PM Mountain."* Leave it out when there are none. During the read-back, offer a decision memo for each answer that passes the `books-record` test, at most two, one line each.
 
 ## 5. Write
 Write `branches/<branch>.md` in the user's working folder using the `data-contract` slot template exactly, header included, with one worked example built by running a script on 3–4 real rows.

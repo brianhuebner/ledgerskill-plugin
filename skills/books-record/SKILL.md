@@ -46,7 +46,7 @@ The header at the top of `branches/<branch>.md` (template in `ledgerskill:data-c
 | `version` | `1` when created |
 | `supersedes` | The version this one replaced (`version` − 1); empty for version 1 |
 | `chart` | The chart of accounts file name; empty when None |
-| `layout` | The import layout name; empty until one is set |
+| `layout` | The built-in layout name, or the template file name |
 | `facts` | `BOOKS-CONTEXT.md` once it exists; empty before |
 | `decisions` | Decision IDs this contract relies on, as a list: `[D-0001, D-0003]`; empty when none |
 | `procedure` | `<branch>.procedure.md` |
@@ -107,6 +107,8 @@ Write a fact only if all three hold:
 3. It is a fact or a definition, not a choice about how one branch books something. Choices go in the contract.
 
 Examples: "Fiscal year ends June 30." "Payroll runs semi-monthly, on the 15th and the last business day." "The POS business day closes at 6 PM local time, so a UTC export splits evenings across two dates." "`LOC01` is the Downtown store."
+
+The first time a contract sets an import tool and layout, record them under Import tool and layout.
 
 Harvest facts from the user's answers and the files. Never interview the user for them. Before writing, name the new facts in the read-back's closing line: "I'll remember: <facts>." Write those the user doesn't correct.
 

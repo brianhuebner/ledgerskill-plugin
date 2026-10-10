@@ -100,7 +100,7 @@ Unmapped value → stop and ask.
 (or None)
 
 Offset line:   <account>, one per entry   (or None, when the layout is not balanced)
-Control total: <external number>, per <entry key>   (or None)
+Control total: <outside number>, from <outside document>, per <entry key, or for the period>; also stated in the file by <rows or column>   (or None)
 Entry date:    `<col>` (<which value within the entry: max / min / first>)
 
 ## Import layout

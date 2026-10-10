@@ -82,7 +82,7 @@ Every processing script runs all of these and prints one line per check, `PASS`,
 4. **Dimensions in line key:** every dimension column is in `LINE_KEY`.
 5. **Amount conservation:** the signed sum of the measure over used rows equals the signed sum of output lines before the offset.
 6. **Balance** (when the layout is balanced): every entry's debits equal its credits, to the cent.
-7. **Control total** (when given): the output agrees with it per entry key, and any difference is shown.
+7. **Control total:** compare the output with the outside amounts the user gave (see Outside facts). Each entry matches an outside amount, or is on the not-yet-posted list: PASS, listing any not-yet-posted entries. A mismatch is a FAIL that shows both numbers and the difference. When the user replied `skip`: WARN "not confirmed against <outside document>", and still compare with the file's own statement of the total when the contract names one. When the contract has no control total: WARN "no control total".
 8. **Names in list:** every line name in `MAPPING` and `OFFSET_ACCOUNT` appears exactly in the list the layout names: the chart's account column when line names are accounts, else `NAME_LIST`. Every account in `FIXED_FIELDS` appears exactly in the chart. A missing name is a FAIL that names it. When the list is None, this check is a WARN: "names not checked".
 9. **Fixed fields used:** every fixed field whose account is not "all lines" lands on at least one output line. A fixed field that lands on no line is a WARN that names it.
 10. **Run ID on every line:** every `import.csv` line's memo contains this run's ID.
@@ -91,6 +91,24 @@ Every processing script runs all of these and prints one line per check, `PASS`,
 13. **Required columns:** every column in the layout's `required` list is non-blank on every `import.csv` line.
 
 A WARN does not stop the run. If any check fails, the script prints every failure and exits with status 1. It still writes its run folder with `checks-<run id>.txt` and `detail.csv`, but no `import.csv`. The script never "fixes" data to pass.
+
+## Outside facts
+
+Facts come from the file; decisions come from the user. An **outside fact** is a third kind: a number the user reads from an outside document, such as a bank statement, lender statement, payroll provider report, vendor statement or Z-report. It comes from the user but is not a choice. Never recommend one, and `use your recommendations` never answers one.
+
+Before every run, ask for the outside number the contract's Control total names, before showing any per-entry total:
+
+> What did <outside document> show for this period? Type the amounts, give me an export of it, or reply `skip`.
+
+- With more than ten entries, recommend the export, or one total for the period with a count of items.
+- Typed amounts are arguments to the script for that run only, e.g. `--outside 1628.76 691.53`, or `--outside-total 2320.29 --outside-count 2`. They are written to the run record, never to the contract or the constants block.
+- An export is profiled like any file. Pass its file, amount column and date column as arguments. Match each entry to an outside amount equal to the cent and dated within the allowed lag: how many days the outside record may trail the entry. Ask for the lag once per branch, recommending a number from the profile, and save it as a client fact.
+- `--not-yet-posted <entry key value> …` lists entries the user says are not in the outside record yet.
+
+On a mismatch, show the check 7 failure, then ask one numbered question with a recommended answer:
+1. Fix the input: retype the amount, or give a different export.
+2. Mark the entry as not yet in the outside record, and run again.
+3. Proceed anyway, with a reason in your own words. The reason becomes a decision memo (see `ledgerskill:books-record`), and the run passes `--accept-mismatch D-NNNN`, which turns that entry's FAIL into a WARN naming the memo.
 
 ## Run ID
 
@@ -125,14 +143,16 @@ source_sha256: <SHA-256>
 chart: <chart file name, or empty>
 chart_sha256: <SHA-256, or empty>
 period: <period>
-control: <same-file | untied>
-control_source: <where the control total came from, or empty>
+control: <confirmed | same-file | untied>
+control_source: <the outside document, and "typed by user" or the export file name; or empty>
+outside_amounts: <the amounts the user gave, as a list; or empty>
+not_yet_posted: <entry key values the user marked as not yet in the outside record; or empty>
 result: <pass | fail>
 run_at: <started, as YYYY-MM-DDTHH:MM:SS>
 ---
 ```
 
-`control` is `same-file` when the control total comes from the source file itself and `untied` when the contract has none.
+`control` is `confirmed` when the output was compared with outside amounts the user gave, `same-file` when the user skipped and it was compared only with the file's own total, and `untied` when neither.
 
 ## Profiling scripts
 
@@ -142,5 +162,5 @@ A profiling script reports facts only, with no interpretation:
 - date range for each date column
 - candidate row keys (columns with all-unique non-blank values)
 - distinct values and counts for low-cardinality text columns (≤ 20 distinct)
-- for each amount column: count positive / negative / zero / blank, and total; also totals by each low-cardinality column
+- for each amount column: count positive / negative / zero / blank, and total; also totals by each low-cardinality column that is not a candidate entry key (no per-entry totals before the outside-fact question)
 - blank counts per column, and any unparseable amounts or dates with row numbers

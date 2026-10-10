@@ -37,7 +37,7 @@ Nothing to export yet. Start Claude Code in an empty folder and run:
 
 The first command writes a sample Stripe export and a sample chart of accounts into the folder. Stripe is only the demo: the same steps work for a payroll register, a loan statement, a POS report, a bank feed or any other transaction file.
 
-When the questions come, reply `use your recommendations`. Answer yes when Claude offers to run it, then open `complete/` to see the import file.
+When the questions come, reply `use your recommendations`. Answer yes when Claude offers to run it, reply `skip` when it asks what the bank showed (it's sample data, so there's no bank statement to check), then open `complete/` to see the import file.
 
 ## Usage with your own books
 
@@ -63,7 +63,7 @@ Start Claude Code in the books folder and run:
 /ledgerskill:grill-books
 ```
 
-Claude finds the two files and asks you to confirm which is which. It profiles the source file, then asks about three rounds of numbered questions, each with a recommended answer. Reply `use your recommendations` to accept them all, or answer in your own words. It reads the result back to you, saves it as `branches/<branch>.md`, and offers to produce the import file. It also writes `branches/<branch>.procedure.md`, a procedure summary of the file, your decisions in your own words, why the accounts are set up the way they are, and how to run the next period. Facts that hold across workflows, such as your fiscal year end or when your sales system closes its day, go in `BOOKS-CONTEXT.md`, so the next grill doesn't ask them again. When an answer is a choice a reviewer would ask about, such as a month-end cutoff, Claude offers to save it as a decision memo in `decisions/`.
+Claude finds the two files and asks you to confirm which is which. It profiles the source file, then asks about three rounds of numbered questions, each with a recommended answer. Reply `use your recommendations` to accept them all, or answer in your own words. Before each run, Claude asks what the outside document showed, such as the deposits on your bank statement or the total on your payroll provider's report. Type the amounts or give it an export before you see its totals, so the check is blind. `use your recommendations` never answers this question, and `skip` runs without it, marked as not confirmed. It reads the result back to you, saves it as `branches/<branch>.md`, and offers to produce the import file. It also writes `branches/<branch>.procedure.md`, a procedure summary of the file, your decisions in your own words, why the accounts are set up the way they are, and how to run the next period. Facts that hold across workflows, such as your fiscal year end or when your sales system closes its day, go in `BOOKS-CONTEXT.md`, so the next grill doesn't ask them again. When an answer is a choice a reviewer would ask about, such as a month-end cutoff, Claude offers to save it as a decision memo in `decisions/`.
 
 ### 5. What happens to your file
 
@@ -74,7 +74,7 @@ Your answers decide:
 - **How rows are summarized:** one entry per payout, per day or per week, and one line per category, location or other column.
 - **Which tags carry over,** such as a location column becoming a QuickBooks Class.
 - **Fixed values you state in plain words,** such as "use the customer 'Stripe Payments' on every A/R line".
-- **What the result must agree with,** such as the deposit on your bank statement.
+- **What the result must agree with,** such as the deposit on your bank statement, and how many days that record may trail the file.
 
 Here is payout `po_A1` from the demo file: six Stripe rows
 

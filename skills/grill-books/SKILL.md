@@ -4,7 +4,7 @@ description: Interview the user about one accounting workflow and one source fil
 disable-model-invocation: true
 ---
 
-Load the `ledgerskill:data-contract`, `ledgerskill:scripted-arithmetic` and `ledgerskill:books-record` skills first, and follow them throughout. Facts come from the file through scripts. Only decisions come from the user.
+Load the `ledgerskill:data-contract`, `ledgerskill:scripted-arithmetic` and `ledgerskill:books-record` skills first, and follow them throughout. Facts come from the file through scripts. Only decisions come from the user. Outside facts, numbers the user reads from an outside document, are a third kind: never recommended, and never answered by `use your recommendations` (see `scripted-arithmetic`).
 
 ## 0. Find the files
 If `BOOKS-CONTEXT.md` exists, read it first. Use its facts to set recommended answers, and do not ask a question it already answers.
@@ -57,9 +57,10 @@ Write `branches/<branch>.md` in the user's working folder using the `data-contra
 Ask: "Want me to run it now and produce the import file?" If yes:
 1. Write `branches/<branch>.py` from the contract, following the `scripted-arithmetic` rules (constants block, all required checks, all three outputs).
 2. Print the echo lines.
-3. Run the script on the source file, with the period taken from the answer to Round 1.
-4. Report the run ID, the run folder and the result of every check. If any check failed, show the failures and ask how to resolve them. Do not change data or checks to make them pass.
-5. If every check passed, move the source file into the run folder as `books-record` describes.
+3. Ask the outside-fact question from `scripted-arithmetic`, phrased from the contract's Control total. Skip it when the contract has none.
+4. Run the script on the source file, with the period taken from the answer to Round 1 and the outside amounts as arguments.
+5. Report the run ID, the run folder and the result of every check. If any check failed, show the failures and ask how to resolve them. Do not change data or checks to make them pass. If check 7 is a WARN because the user skipped, repeat it in one line.
+6. If every check passed, move the source file into the run folder as `books-record` describes.
 
 ## 7. Write the record
 Whether or not the user ran it, write `branches/<branch>.procedure.md` from the `books-record` template: the profile facts, every decision from the rounds with the user's words quoted, and one Runs row if it ran. Create or add to `BOOKS-CONTEXT.md` with the facts from the read-back, and set the contract header's `facts:` when the file exists. Write each decision memo the user accepted and list its ID in the header's `decisions:`. Tell the user in one line that the procedure summary is saved, and give its path.

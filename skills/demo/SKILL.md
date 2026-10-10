@@ -9,7 +9,7 @@ disable-model-invocation: true
 3. Tell the user, in no more than 4 lines:
    - The two files you wrote: a September Stripe balance export (10 transactions, 2 payouts) and an 8-account chart of accounts.
    - Next, run: `/ledgerskill:grill-books`
-   - When the questions come, reply `use your recommendations` to accept every recommended answer.
+   - When the questions come, reply `use your recommendations` to accept every recommended answer, and `skip` when asked what the bank showed.
 
 ## stripe_balance_sep.csv
 

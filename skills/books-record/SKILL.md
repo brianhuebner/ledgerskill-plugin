@@ -15,7 +15,8 @@ The plugin leaves a written record of every workflow it sets up and every run it
 | `branches/<branch>.py` | Script | When the contract is written or changed | Regenerated when the contract changes |
 | `branches/<branch>.procedure.md` | Procedure summary | End of the first grill | Rows appended to its Runs table; nothing else |
 | `branches/archive/<branch>.v<N>.md` and `.py` | An earlier contract and its script | Before the contract changes | Never |
-| `runs/<period>/<branch>-<run id>/` | One run: `import.csv`, `detail.csv`, `checks-<run id>.txt` | Each run, by the script | Never |
+| `to_be_processed/` | The user's inbox: source files waiting for a run | By the user | Claude moves a file out after a passing run |
+| `complete/<period>/<branch>-<run id>/` | One run: `import.csv`, `detail.csv`, `checks-<run id>.txt`, and the source file after a passing run | Each run, by the script; the source file by Claude | Never |
 
 ## Rules
 
@@ -23,6 +24,16 @@ The plugin leaves a written record of every workflow it sets up and every run it
 - Every number in a record comes from script output, as `ledgerskill:scripted-arithmetic` requires.
 - Header keys are fixed. A key with no value is written empty, never left out.
 - Write dates as `YYYY-MM-DD`.
+
+## Source files
+
+Keep the folder tidy; trust the user with the rest. Avoiding overlapping exports, and tracking what reached the books, is up to the user.
+
+- Look for source files in `to_be_processed/` first, then in the books folder itself. A file the user names is always accepted, wherever it is, including inside `complete/`.
+- After a **passing** run, Claude (never the script) moves the source file into that run's folder. Check first that no file with that name is there; never overwrite. If the move isn't possible, leave the file where it is and say so in one line of the final report.
+- After a failed run, leave the source file where it is.
+- When the source file is already inside an earlier run's folder (a rerun), **copy** it into the new run's folder. Never move a file out of an earlier run.
+- The chart of accounts and any import template stay where they are.
 
 ## Contract header
 
@@ -78,8 +89,8 @@ return to zero when the outside record arrives.>
 - Import `import.csv` with <the import tool>.
 
 ## 7. Next period
-Save the new export into this folder, then run:
-`/ledgerskill:run-branch <file name>`
+Save the new export into `to_be_processed/`, then run:
+`/ledgerskill:run-branch`
 ```
 
 Section 7 always gives the `/ledgerskill:run-branch` command, never a direct `python3` call: running the script directly skips the check for values the contract has not seen.

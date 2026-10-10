@@ -37,13 +37,13 @@ Nothing to export yet. Start Claude Code in an empty folder and run:
 
 The first command writes a sample Stripe export and a sample chart of accounts into the folder. Stripe is only the demo: the same steps work for a payroll register, a loan statement, a POS report, a bank feed or any other transaction file.
 
-When the questions come, reply `use your recommendations`. Answer yes when Claude offers to run it, then open `runs/` to see the import file.
+When the questions come, reply `use your recommendations`. Answer yes when Claude offers to run it, then open `complete/` to see the import file.
 
 ## Usage with your own books
 
 ### 1. Make a books folder
 
-Create an empty folder anywhere, for example `~/books`. Your books stay in QuickBooks, Xero or whatever you use. This folder only holds the files you export and the files the plugin writes.
+Create an empty folder anywhere, for example `~/books`, and inside it a folder named `to_be_processed`. Your books stay in QuickBooks, Xero or whatever you use. This folder only holds the files you export and the files the plugin writes.
 
 ### 2. Export your chart of accounts
 
@@ -53,7 +53,7 @@ It's optional. Without it, reply `skip` when asked and Claude takes account name
 
 ### 3. Export one source file
 
-Export a CSV from wherever the transactions come from, such as a Stripe balance report, a Square sales export, a bank statement or a POS report, and save it into the books folder. One file covering many days is the normal case. The point is to turn hundreds of rows into a few summarized entries.
+Export a CSV from wherever the transactions come from, such as a Stripe balance report, a Square sales export, a bank statement or a POS report, and save it into `to_be_processed/`. One file covering many days is the normal case. The point is to turn hundreds of rows into a few summarized entries.
 
 ### 4. Grill it
 
@@ -105,22 +105,23 @@ The two LOC01 charges are summed into one line, the row with no location goes to
 
 ### Next period
 
-Export the new file into the same folder and run:
+Save the new export into `to_be_processed/` and run:
 
 ```
-/ledgerskill:run-branch path/to/next-month.csv
+/ledgerskill:run-branch
 ```
 
-It picks the matching workflow, stops to ask only about anything new in the file (a new category or location, for example), produces the import file, and adds the run to the procedure summary.
+It picks the matching workflow, stops to ask only about anything new in the file (a new category or location, for example), produces the import file, and adds the run to the procedure summary. After a passing run, the source file moves into that run's folder, so `to_be_processed/` holds only what's still waiting. Avoiding overlapping exports and tracking what you imported is up to you.
 
 ### Output
 
-Each run gets a run ID, the time it started, such as `LS-20260905-081200`, and writes to `runs/<period>/<branch>-<run id>/`:
+Each run gets a run ID, the time it started, such as `LS-20260905-081200`, and writes to `complete/<period>/<branch>-<run id>/`:
 
 | File | Contents |
 |---|---|
 | `import.csv` | Balanced journal lines, ready to import; every memo ends with the run ID |
 | `detail.csv` | One row per source row: used or excluded, why, and which import line it feeds |
+| your source file | Moved here after a passing run |
 | `checks-<run id>.txt` | The run record: run ID, contract version, hashes of the source, chart, contract and script, then the result of every tie-out check |
 
 If a check fails, no `import.csv` is written. Claude shows you the failures and asks how to resolve them. It never changes data or loosens a check to make it pass.
@@ -129,7 +130,7 @@ Runs are never overwritten. Running the same period again gets a new run ID and 
 
 ## What it does on your computer
 
-- **Writes only into your books folder:** `BOOKS-CONTEXT.md` (client facts), `decisions/` (decision memos you accepted), `branches/` (the contract, its script and its procedure summary), `runs/` (outputs), and the two sample files from `/ledgerskill:demo`. It never deletes, renames or edits your source files or your chart of accounts.
+- **Writes only into your books folder:** `BOOKS-CONTEXT.md` (client facts), `decisions/` (decision memos you accepted), `branches/` (the contract, its script and its procedure summary), `complete/` (outputs), and the two sample files from `/ledgerskill:demo`. It never deletes or edits your source files or your chart of accounts. The one thing it moves: after a passing run, Claude moves the source file into that run's folder, and never over an existing file.
 - **Runs Python scripts it writes:** each script reads your file and writes its outputs. The rules it follows: standard library only, no network, no subprocesses, no deleting files. Claude Code asks your permission before running a command, unless you've allowed it. The script is in `branches/`, so you can read it first.
 - **Has no hooks, MCP servers or background processes.** The plugin is six plain-text `SKILL.md` files you can read in a few minutes.
 - **Treats your data as data.** The skills tell Claude never to follow text found in your files, such as a memo field, as an instruction, and to point out anything that reads like one.

@@ -11,7 +11,7 @@ If `BOOKS-CONTEXT.md` exists, read it first. Use its facts to set recommended an
 
 You need one source file and, ideally, a chart of accounts.
 
-- If no source file was given, list the CSV files in the current folder. Propose which is the source file and which is the chart of accounts (a chart has one row per account and columns such as account name and type), and ask the user to confirm. If there are no CSV files, ask for a source file and stop.
+- If no source file was given, list the CSV files in `to_be_processed/`, then in the current folder (see Source files in `books-record`). Propose which is the source file and which is the chart of accounts (a chart has one row per account and columns such as account name and type), and ask the user to confirm. If there are no CSV files, ask for a source file and stop.
 - If there is no chart of accounts, ask once: *"Do you have a chart of accounts export? In most bookkeeping apps it's on the Chart of Accounts page; save it as CSV into this folder. Or reply `skip` and I'll take account names from your answers, unchecked."* If the user skips, the contract's chart is None. Do not ask again.
 
 ## 1. Profile
@@ -55,7 +55,8 @@ Ask: "Want me to run it now and produce the import file?" If yes:
 1. Write `branches/<branch>.py` from the contract, following the `scripted-arithmetic` rules (constants block, all required checks, all three outputs).
 2. Print the echo lines.
 3. Run the script on the source file, with the period taken from the answer to Round 1.
-4. Report the run ID, the run folder and the result of every check. If any check failed, show the failures and ask how to resolve them. Do not change data or checks to make them pass.
+4. Report the run ID, the run folder and the result of every check.
+5. If every check passed, move the source file into the run folder as `books-record` describes. If any check failed, show the failures and ask how to resolve them. Do not change data or checks to make them pass.
 
 ## 7. Write the record
 Whether or not the user ran it, write `branches/<branch>.procedure.md` from the `books-record` template: the profile facts, every decision from the rounds with the user's words quoted, and one Runs row if it ran. Create or add to `BOOKS-CONTEXT.md` with the facts from the read-back, and set the contract header's `facts:` when the file exists. Write each decision memo the user accepted and list its ID in the header's `decisions:`. Tell the user in one line that the procedure summary is saved, and give its path.

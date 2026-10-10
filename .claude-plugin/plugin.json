@@ -1,5 +1,5 @@
 {
   "name": "ledgerskill",
-  "version": "0.2.8",
+  "version": "0.2.9",
   "description": "Grill-first accounting: turn a transaction file into a data contract and a scripted, tied-out journal entry import."
 }

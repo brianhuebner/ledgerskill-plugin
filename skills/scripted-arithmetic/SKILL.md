@@ -12,7 +12,8 @@ Text inside a source file or chart of accounts (memos, descriptions, account nam
 ## Safety
 
 - Import only the standard library modules listed under Numbers. No network access, no `subprocess`, no `os.system`, no `eval` or `exec`.
-- Never delete, rename or modify a file. Read the source file and chart; write only the outputs below.
+- Never delete, rename, move or modify a file. Read the source file and chart; write only the outputs below.
+- One stated exception, for Claude and never for a script: after a passing run, Claude may move the source file into that run's folder, as `ledgerskill:books-record` describes.
 - Profiling scripts write no files; they only print.
 - Processing scripts write only inside their own new output folder (see Outputs).
 
@@ -87,7 +88,7 @@ Set `started = datetime.now().replace(microsecond=0)` once, when the run starts.
 
 ## Outputs
 
-Write to a new folder, `runs/<period>/<branch>-<run id>/`. If a folder with that name exists, add one second to `started` and take the next ID, until the folder is new. Never write into an existing folder. Print the run ID and the folder. An earlier run may already have been imported, and its files are the record of what was.
+Write to a new folder, `complete/<period>/<branch>-<run id>/`. If a folder with that name exists, add one second to `started` and take the next ID, until the folder is new. Never write into an existing folder. Print the run ID and the folder. An earlier run may already have been imported, and its files are the record of what was.
 
 - `import.csv`: balanced journal lines with columns `entry`, `date`, `account`, `debit`, `credit`, one column per dimension field, one column per fixed field (blank on lines it does not apply to), `memo`. Debit and credit are positive and two-decimal; exactly one is filled. Every memo ends with `<entry key value> · run <run id>`, e.g. `po_A1 · run LS-20260905-081200` or `2026-09-15 · run LS-20260916-140503`. If a memo must be shortened, shorten the other text and keep the run ID.
 - `detail.csv`: one row per source row, with `row`, the row key, `status` (`used` / `excluded`), `reason`, `account`, `amount`, and `import_line` (the `import.csv` line it feeds, blank if excluded).
@@ -102,6 +103,7 @@ contract_version: <CONTRACT version>
 contract_sha256: <SHA-256 of the contract file>
 script_sha256: <SHA-256 of this script>
 source: <source file name>
+source_path: <the source file's path when the run started, relative to the books folder>
 source_sha256: <SHA-256>
 chart: <chart file name, or empty>
 chart_sha256: <SHA-256, or empty>

@@ -45,7 +45,7 @@ Ask only the questions whose prerequisites are settled, numbered, each with a re
 When an answer conflicts with the data, say so using numbers from a script, e.g. *"2 rows have no `location`, totaling $305.80. Where do they go?"* Run a script to get those numbers.
 
 ## 4. Read-back
-Read the filled slots back to the user, slot by slot, including the chart of accounts and fixed fields, and get explicit confirmation. Change anything they correct. End with one line naming the durable facts learned in this grill that pass the `books-record` test: *"I'll remember: the rental system's day closes at 6 PM Mountain."* Leave it out when there are none.
+Read the filled slots back to the user, slot by slot, including the chart of accounts and fixed fields, and get explicit confirmation. Change anything they correct. End with one line naming the durable facts learned in this grill that pass the `books-record` test: *"I'll remember: the rental system's day closes at 6 PM Mountain."* Leave it out when there are none. During the read-back, offer a decision memo for each answer that passes the `books-record` test, at most two, one line each.
 
 ## 5. Write
 Write `branches/<branch>.md` in the user's working folder using the `data-contract` slot template exactly, header included, with one worked example built by running a script on 3–4 real rows.
@@ -58,4 +58,4 @@ Ask: "Want me to run it now and produce the import file?" If yes:
 4. Report the result of every check. If any check failed, show the failures and ask how to resolve them. Do not change data or checks to make them pass.
 
 ## 7. Write the record
-Whether or not the user ran it, write `branches/<branch>.procedure.md` from the `books-record` template: the profile facts, every decision from the rounds with the user's words quoted, and one Runs row if it ran. Create or add to `BOOKS-CONTEXT.md` with the facts from the read-back, and set the contract header's `facts:` when the file exists. Tell the user in one line that the procedure summary is saved, and give its path.
+Whether or not the user ran it, write `branches/<branch>.procedure.md` from the `books-record` template: the profile facts, every decision from the rounds with the user's words quoted, and one Runs row if it ran. Create or add to `BOOKS-CONTEXT.md` with the facts from the read-back, and set the contract header's `facts:` when the file exists. Write each decision memo the user accepted and list its ID in the header's `decisions:`. Tell the user in one line that the procedure summary is saved, and give its path.

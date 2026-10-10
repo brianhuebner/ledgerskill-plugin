@@ -63,7 +63,7 @@ Start Claude Code in the books folder and run:
 /ledgerskill:grill-books
 ```
 
-Claude finds the two files and asks you to confirm which is which. It profiles the source file, then asks about three rounds of numbered questions, each with a recommended answer. Reply `use your recommendations` to accept them all, or answer in your own words. It reads the result back to you, saves it as `branches/<branch>.md`, and offers to produce the import file. It also writes `branches/<branch>.procedure.md`, a procedure summary of the file, your decisions in your own words, why the accounts are set up the way they are, and how to run the next period. Facts that hold across workflows, such as your fiscal year end or when your sales system closes its day, go in `BOOKS-CONTEXT.md`, so the next grill doesn't ask them again.
+Claude finds the two files and asks you to confirm which is which. It profiles the source file, then asks about three rounds of numbered questions, each with a recommended answer. Reply `use your recommendations` to accept them all, or answer in your own words. It reads the result back to you, saves it as `branches/<branch>.md`, and offers to produce the import file. It also writes `branches/<branch>.procedure.md`, a procedure summary of the file, your decisions in your own words, why the accounts are set up the way they are, and how to run the next period. Facts that hold across workflows, such as your fiscal year end or when your sales system closes its day, go in `BOOKS-CONTEXT.md`, so the next grill doesn't ask them again. When an answer is a choice a reviewer would ask about, such as a month-end cutoff, Claude offers to save it as a decision memo in `decisions/`.
 
 ### 5. What happens to your file
 
@@ -129,7 +129,7 @@ Runs are never overwritten. Running the same period again writes to `runs/<perio
 
 ## What it does on your computer
 
-- **Writes only into your books folder:** `BOOKS-CONTEXT.md` (client facts), `branches/` (the contract, its script and its procedure summary), `runs/` (outputs), and the two sample files from `/ledgerskill:demo`. It never deletes, renames or edits your source files or your chart of accounts.
+- **Writes only into your books folder:** `BOOKS-CONTEXT.md` (client facts), `decisions/` (decision memos you accepted), `branches/` (the contract, its script and its procedure summary), `runs/` (outputs), and the two sample files from `/ledgerskill:demo`. It never deletes, renames or edits your source files or your chart of accounts.
 - **Runs Python scripts it writes:** each script reads your file and writes its outputs. The rules it follows: standard library only, no network, no subprocesses, no deleting files. Claude Code asks your permission before running a command, unless you've allowed it. The script is in `branches/`, so you can read it first.
 - **Has no hooks, MCP servers or background processes.** The plugin is six plain-text `SKILL.md` files you can read in a few minutes.
 - **Treats your data as data.** The skills tell Claude never to follow text found in your files, such as a memo field, as an instruction, and to point out anything that reads like one.
@@ -145,7 +145,7 @@ Runs are never overwritten. Running the same period again writes to `runs/<perio
 | `demo` | You type it | Writes a sample Stripe file and chart of accounts into the current folder |
 | `data-contract` | Automatic | Fixed vocabulary and slot template for every contract |
 | `scripted-arithmetic` | Automatic | Rules every data script must follow |
-| `books-record` | Automatic | The procedure summary, client facts and other records written to your books folder |
+| `books-record` | Automatic | The procedure summary, client facts and decision memos written to your books folder |
 
 ## Developing
 

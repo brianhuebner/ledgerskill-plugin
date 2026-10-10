@@ -1,6 +1,6 @@
 ---
 name: books-record
-description: Use whenever a grill or a run starts or finishes, and whenever a record in the books folder is written or read — the contract header, a branch's procedure summary (branches/<branch>.procedure.md) or the client facts (BOOKS-CONTEXT.md).
+description: Use whenever a grill or a run starts or finishes, and whenever a record in the books folder is written or read — the contract header, a branch's procedure summary (branches/<branch>.procedure.md), the client facts (BOOKS-CONTEXT.md) or a decision memo (decisions/D-NNNN-<slug>.md).
 ---
 
 The plugin leaves a written record of every workflow it sets up and every run it makes. Claude writes these records without being asked. The user reads sentences and tables; never show them a YAML header.
@@ -10,6 +10,7 @@ The plugin leaves a written record of every workflow it sets up and every run it
 | Path | Record | Written | Changes after writing |
 |---|---|---|---|
 | `BOOKS-CONTEXT.md` | Client facts | When the first durable fact is learned | New lines appended as facts are learned |
+| `decisions/D-NNNN-<slug>.md` | Decision memo | When the user accepts the offer | Never, except `status` and `replaced_by` when a new memo replaces it |
 | `branches/<branch>.md` | Contract, with a header | End of a grill | Only when the user changes the contract |
 | `branches/<branch>.py` | Script | When the contract is written or changed | Regenerated when the contract changes |
 | `branches/<branch>.procedure.md` | Procedure summary | End of the first grill | Rows appended to its Runs table; nothing else |
@@ -35,7 +36,7 @@ The header at the top of `branches/<branch>.md` (template in `ledgerskill:data-c
 | `chart` | The chart of accounts file name; empty when None |
 | `layout` | The import layout name; empty until one is set |
 | `facts` | `BOOKS-CONTEXT.md` once it exists; empty before |
-| `decisions` | Decision IDs this contract relies on; empty when none |
+| `decisions` | Decision IDs this contract relies on, as a list: `[D-0001, D-0003]`; empty when none |
 | `procedure` | `<branch>.procedure.md` |
 
 ## Procedure summary
@@ -118,3 +119,43 @@ Facts about these books that hold across workflows. Written by ledgerskill.
 ## Open questions
 - <YYYY-MM-DD> <a question raised and not yet settled>
 ```
+
+## Decision memos
+
+A memo records one choice a reviewer will ask about, in the user's own words. Offer one only when all three hold:
+1. It is hard to reverse once the books close on it.
+2. A reviewer would ask why.
+3. There was a real alternative.
+
+Examples: a month-end cutoff for transactions that straddle two periods; booking card sales at gross with fees as their own line instead of net; accruing payroll by pay period instead of by pay date.
+
+Offer it in one line, after the user has answered: "Save this as a decision? (yes)". Offer at most two memos per grill. Write a memo only on yes.
+
+Number memos `D-0001`, `D-0002`, … in the order written: list `decisions/` and take the next number after the highest. A number is never reused, even when a memo is replaced. The slug is 2–4 words from the question, lowercase with hyphens. After writing, add the ID to the `decisions:` header key of each contract that relies on it.
+
+```markdown
+---
+type: decision
+id: D-NNNN
+date: <YYYY-MM-DD>
+branches: [<branch>, …]
+status: active
+replaced_by:
+replaces:
+---
+# D-NNNN: <the question, in a few words>
+
+**Question.** <what had to be decided, and why it came up>
+
+**Options.**
+1. <option>
+2. <option>
+
+**Choice.** <the option chosen>
+
+**Reason.** "<the user's words, quoted>"
+
+**What would change it.** <the fact or event that would reopen this>
+```
+
+A memo is never rewritten. To change a decision, write a new memo whose `replaces:` names the old ID. The only edit ever made to the old memo is setting `status: replaced` and `replaced_by: <new ID>` in its header.

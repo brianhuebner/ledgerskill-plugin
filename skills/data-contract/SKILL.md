@@ -48,9 +48,20 @@ A **branch** is one named workflow with one contract (e.g. `stripe-payout-settle
 
 ## Slot template
 
-Every branch file `branches/<branch>.md` has exactly these sections and slots, in this order:
+Every branch file `branches/<branch>.md` has exactly these sections and slots, in this order. It starts with the header that `ledgerskill:books-record` defines; Claude writes it, and it is never shown to the user.
 
 ```markdown
+---
+type: contract
+id: <branch>
+version: 1
+supersedes:
+chart: <chart file name, or empty>
+layout:
+facts:
+decisions:
+procedure: <branch>.procedure.md
+---
 # <branch>
 
 Basis: <observable fact in the source that selects this branch>
@@ -98,6 +109,7 @@ Entry date:    `<col>` (<which value within the entry: max / min / first>)
 
 - Column names in backticks; values quoted exactly as in the file. Never "the type column."
 - Every slot is filled. "None" is valid; a missing slot is an error.
+- Every header key is present. A key with no value is written empty.
 - One worked example. It encodes grain better than any sentence.
 
 ## Echo lines

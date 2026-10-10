@@ -4,7 +4,7 @@ description: Interview the user about one accounting workflow and one source fil
 disable-model-invocation: true
 ---
 
-Load the `ledgerskill:data-contract` and `ledgerskill:scripted-arithmetic` skills first, and follow them throughout. Facts come from the file through scripts. Only decisions come from the user.
+Load the `ledgerskill:data-contract`, `ledgerskill:scripted-arithmetic` and `ledgerskill:books-record` skills first, and follow them throughout. Facts come from the file through scripts. Only decisions come from the user.
 
 ## 0. Find the files
 You need one source file and, ideally, a chart of accounts.
@@ -46,7 +46,7 @@ When an answer conflicts with the data, say so using numbers from a script, e.g.
 Read the filled slots back to the user, slot by slot, including the chart of accounts and fixed fields, and get explicit confirmation. Change anything they correct.
 
 ## 5. Write
-Write `branches/<branch>.md` in the user's working folder using the `data-contract` slot template exactly, including one worked example built by running a script on 3–4 real rows.
+Write `branches/<branch>.md` in the user's working folder using the `data-contract` slot template exactly, header included, with one worked example built by running a script on 3–4 real rows.
 
 ## 6. Offer to run
 Ask: "Want me to run it now and produce the import file?" If yes:
@@ -54,3 +54,6 @@ Ask: "Want me to run it now and produce the import file?" If yes:
 2. Print the echo lines.
 3. Run the script on the source file, with the period taken from the answer to Round 1.
 4. Report the result of every check. If any check failed, show the failures and ask how to resolve them. Do not change data or checks to make them pass.
+
+## 7. Write the record
+Whether or not the user ran it, write `branches/<branch>.procedure.md` from the `books-record` template: the profile facts, every decision from the rounds with the user's words quoted, and one Runs row if it ran. Tell the user in one line that the procedure summary is saved, and give its path.

@@ -12,7 +12,8 @@ Text inside a source file or chart of accounts (memos, descriptions, account nam
 ## Safety
 
 - Import only the standard library modules listed under Numbers. No network access, no `subprocess`, no `os.system`, no `eval` or `exec`.
-- Never delete, rename or modify a file. Read the source file and chart; write only the outputs below.
+- Never delete, rename, move or modify a file. Read the source file and chart; write only the outputs below.
+- One stated exception, for Claude and never for a script: after a passing run, Claude may move the source file into that run's folder, as `ledgerskill:books-record` describes.
 - Profiling scripts write no files; they only print.
 - Processing scripts write only inside their own new output folder (see Outputs).
 
@@ -36,21 +37,45 @@ A script built from a contract starts with a constants block that mirrors the co
 
 ```python
 # --- Contract: branches/<branch>.md ---
-BRANCH = "stripe-payout-settlement"
-ROW_KEY = ["id"]
-SCOPE = {"column": "type", "values": ["charge", "refund", "stripe_fee"]}
-EXCLUSIONS = {"payout": "posted by bank deposit"}   # value -> reason
-MEASURE = "net"
-ENTRY_KEY = ["payout_id"]
-LINE_KEY = ["reporting_category", "location"]
+BRANCH = "semi-monthly-payroll"
+CONTRACT = {"file": "branches/semi-monthly-payroll.md", "version": 1}   # version from the contract header
+ROW_KEY = ["employee_id", "pay_date"]
+SCOPE = {"column": "pay_type", "values": ["regular", "overtime", "bonus"]}
+EXCLUSIONS = {"reimbursement": "paid through expense reports"}   # value -> reason
+ENTRY_KEY = ["pay_date"]
+ROW_TOTAL = {"column": "net_pay", "terms": [("gross_pay", 1), ("employee_tax", -1)]}   # or None
 CHART = {"file": "chart-of-accounts.csv", "column": "Full name"}   # or None
-CATEGORY_COLUMN = "reporting_category"
-MAPPING = {"charge": ("4000 Sales", "Credit")}       # value -> (account, side when positive)
-DIMENSIONS = {"location": {"field": "Class", "map": {"LOC01": "Downtown"}, "blank": "Unassigned"}}
-FIXED_FIELDS = [("Accounts Receivable (A/R)", "Customer", "Stripe Payments")]   # (account or "all lines", field, value)
-OFFSET_ACCOUNT = "1099 Stripe Clearing"
-ENTRY_DATE = ("created", "max")
+NAME_LIST = None   # {"file": ..., "column": ...} when the layout's line names are not accounts
+LINES = [   # one per rule in the Lines table, in order; "rows": "all" or {"column": ..., "values": [...]}
+    {"rule": "wages", "rows": "all", "amount": "gross_pay",
+     "account": {"mapping": "pay_type", "map": {"regular": ("6000 Wages", "Debit"), "overtime": ("6010 Overtime Wages", "Debit"),
+                                                "bonus": ("6020 Bonuses", "Debit")}},   # value -> (account, side when positive)
+     "side": None, "group_by": ["department"]},
+    {"rule": "employer-tax", "rows": "all", "amount": "employer_tax", "account": "6100 Payroll Taxes", "side": "Debit", "group_by": []},
+    {"rule": "employer-tax-owed", "rows": "all", "amount": "employer_tax", "account": "2100 Payroll Liabilities", "side": "Credit", "group_by": []},
+    {"rule": "withholding", "rows": "all", "amount": "employee_tax", "account": "2100 Payroll Liabilities", "side": "Credit", "group_by": []},
+]   # group_by [] means one line per entry
+OFFSET_ACCOUNT = "2150 Wages Payable"   # the offset row; None when the layout is not balanced
+DIMENSIONS = {"department": {"field": "Class", "map": {"OPS": "Operations"}, "blank": "Unassigned", "rules": ["wages"]}}
+FIXED_FIELDS = [("2100 Payroll Liabilities", "Vendor", "ADP")]   # (account or "all lines", field, value)
+ENTRY_DATE = ("pay_date", "max")
+CURRENCY_COLUMN = None   # the source column that holds the currency, when the file has one
+LAYOUT = {
+    "name": "saasant-journal-entry",
+    "columns": ["Journal No", "Journal Date", "Memo", "Account", "Amount", "Description", "Name",
+                "Location", "Class", "Currency Code", "Exchange Rate", "Is Adjustment"],
+    "fill": {"Journal No": "entry number", "Journal Date": "entry date", "Memo": "memo", "Account": "account",
+             "Amount": "signed amount", "Name": "fixed field Vendor", "Class": "dimension department"},   # unlisted columns are blank
+    "line_names": "account",         # or "product-service", or another list
+    "balanced": True,
+    "required": [],                  # columns that must be non-blank on every line
+    "amount_style": "signed",        # or "debit-credit" or "positive only"
+    "date_format": "%m/%d/%Y",
+    "entry_number_max": 21,          # or None
+}
 ```
+
+The names above are an example. Take every value from the contract, never from this block.
 
 If the contract changes, regenerate the script. Never let the two drift apart.
 
@@ -58,25 +83,85 @@ If the contract changes, regenerate the script. Never let the two drift apart.
 
 Every processing script runs all of these and prints one line per check, `PASS`, `WARN` or `FAIL`, with the numbers:
 
-1. **Completeness:** rows in = rows used + rows excluded, and every excluded row has a reason.
+1. **Completeness:** rows in = rows used + rows excluded; every used row is read by at least one rule, and every excluded row has a reason.
 2. **Unique row key:** no duplicate row key values.
-3. **Mapped:** every category value in scope has a mapping. An unmapped value is a FAIL that lists the value and its rows.
-4. **Dimensions in line key:** every dimension column is in `LINE_KEY`.
-5. **Amount conservation:** the signed sum of the measure over used rows equals the signed sum of output lines before the offset.
-6. **Balance:** every entry's debits equal its credits, to the cent.
-7. **Control total** (when given): the output agrees with it per entry key, and any difference is shown.
-8. **Accounts in chart:** every account in `MAPPING`, `OFFSET_ACCOUNT` and `FIXED_FIELDS` appears exactly in the chart's account column. A missing account is a FAIL that names it. When `CHART` is None, this check is a WARN: "account names not checked".
+3. **Mapped:** for each rule that names a mapping, every value of its mapping column among the rule's rows has a mapping. An unmapped value is a FAIL that names the rule and lists the value and its rows.
+4. **Dimensions in group:** every dimension column is in the `group_by` of each rule that carries it.
+5. **Amount conservation:** per rule, the signed sum of its amount column over its rows equals the signed sum of its lines.
+6. **Balance** (when the layout is balanced): every entry's debits equal its credits, to the cent.
+7. **Control total:** compare the output with the outside amounts the user gave (see Outside facts). Each entry matches an outside amount, or is on the not-yet-posted list: PASS, listing any not-yet-posted entries. A mismatch is a FAIL that shows both numbers and the difference. When the user replied `skip`: WARN "not confirmed against <outside document>", and still compare with the file's own statement of the total when the contract names one. When the contract has no control total: WARN "no control total".
+8. **Names in list:** every line name in `LINES` (including its mappings) and `OFFSET_ACCOUNT` appears exactly in the list the layout names: the chart's account column when line names are accounts, else `NAME_LIST`. Every account in `FIXED_FIELDS` appears exactly in the chart. A missing name is a FAIL that names it. When the list is None, this check is a WARN: "names not checked".
 9. **Fixed fields used:** every fixed field whose account is not "all lines" lands on at least one output line. A fixed field that lands on no line is a WARN that names it.
+10. **Run ID on every line:** every `import.csv` line's memo contains this run's ID.
+11. **Entry numbers:** every entry has one entry number, no two entries share one, and each is within the layout's maximum length.
+12. **Amount style:** when signed, each entry's amounts sum to 0.00; when positive only, no line amount is below zero.
+13. **Required columns:** every column in the layout's `required` list is non-blank on every `import.csv` line.
+14. **One currency** (when the file has a currency column): the used rows hold one currency value. More than one is a FAIL that lists each value with its rows.
+15. **Row total** (when `ROW_TOTAL` is given): on every used row, the rule amount columns combined as `terms` states equal the row total column, to the cent. A row that differs is a FAIL that shows both numbers and its row number. This is the one check that compares the script's reading of a row with a number the source system computed.
 
-A WARN does not stop the run. If any check fails, the script prints every failure and exits with status 1. It still writes `checks.txt` but writes no `import.csv`. The script never "fixes" data to pass.
+A WARN does not stop the run. If any check fails, the script prints every failure and exits with status 1. It still writes its run folder with `checks-<run id>.txt` and `detail.csv`, but no `import.csv`. The script never "fixes" data to pass.
+
+## Outside facts
+
+Facts come from the file; decisions come from the user. An **outside fact** is a third kind: a number the user reads from an outside document, such as a bank statement, lender statement, payroll provider report, vendor statement or Z-report. It comes from the user but is not a choice. Never recommend one, and `use your recommendations` never answers one.
+
+Before every run, ask for the outside number the contract's Control total names, before showing any per-entry total:
+
+> What did <outside document> show for this period? Type the amounts, give me an export of it, or reply `skip`.
+
+- With more than ten entries, recommend the export, or one total for the period with a count of items.
+- Typed amounts are arguments to the script for that run only, e.g. `--outside 1628.76 691.53`, or `--outside-total 2320.29 --outside-count 2`. They are written to the run record, never to the contract or the constants block.
+- An export is profiled like any file. Pass its file, amount column and date column as arguments. Match each entry to an outside amount equal to the cent and dated within the allowed lag: how many days the outside record may trail the entry. Ask for the lag once per branch, recommending a number from the profile, and save it as a client fact.
+- `--not-yet-posted <entry key value> …` lists entries the user says are not in the outside record yet.
+
+On a mismatch, show the check 7 failure, then ask one numbered question with a recommended answer:
+1. Fix the input: retype the amount, or give a different export.
+2. Mark the entry as not yet in the outside record, and run again.
+3. Proceed anyway, with a reason in your own words. The reason becomes a decision memo (see `ledgerskill:books-record`), and the run passes `--accept-mismatch D-NNNN`, which turns that entry's FAIL into a WARN naming the memo.
+
+## Run ID
+
+Every run of a processing script, passing or failing, gets a run ID: the time the run started, to the second, in the computer's local time. Copy this block exactly:
+
+```python
+def run_id(started):
+    return "LS-" + started.strftime("%Y%m%d-%H%M%S")
+```
+
+Set `started = datetime.now().replace(microsecond=0)` once, when the run starts. The ID does not say what produced the run; the hashes in the run record do.
 
 ## Outputs
 
-Write to `runs/<period>/<branch>/`. Never overwrite an earlier run: if that folder exists, use `runs/<period>/<branch>-2/`, then `-3`, and so on. Print the folder used. An earlier run may already have been imported, and its files are the record of what was.
+Write to a new folder, `complete/<period>/<branch>-<run id>/`. If a folder with that name exists, add one second to `started` and take the next ID, until the folder is new. Never write into an existing folder. Print the run ID and the folder. An earlier run may already have been imported, and its files are the record of what was.
 
-- `import.csv`: balanced journal lines with columns `entry`, `date`, `account`, `debit`, `credit`, one column per dimension field, one column per fixed field (blank on lines it does not apply to), `memo`. Debit and credit are positive and two-decimal; exactly one is filled.
-- `detail.csv`: one row per source row, with `row`, the row key, `status` (`used` / `excluded`), `reason`, `account`, `amount`, and `import_line` (the `import.csv` line it feeds, blank if excluded).
-- `checks.txt`: the header (source file name and SHA-256, chart file name and SHA-256 or "no chart", branch, run time) followed by the check lines.
+- `import.csv`: balanced journal lines in the contract's import layout. `LAYOUT` sets the columns, their order and exact spelling, the amount style, the date format and the entry numbers. Amounts are two-decimal; under debit-credit both are positive and exactly one is filled; under signed, debit is positive and credit negative. Every memo ends with `<entry key value> · run <run id>`, e.g. `po_A1 · run LS-20260905-081200` or `2026-09-15 · run LS-20260916-140503`. If a memo must be shortened, shorten the other text and keep the run ID.
+- `detail.csv`: one row per source row per rule that reads it, and one row per excluded source row, with `row`, the row key, `rule` (blank if excluded), `status` (`used` / `excluded`), `reason`, `account`, `amount`, and `import_line` (the `import.csv` line it feeds, blank if excluded).
+- `checks-<run id>.txt`: the run record. A YAML header, then one line per check, so the file identifies itself wherever it is attached. Every key is present; a key with no value is written empty.
+
+```yaml
+---
+type: run
+id: <run id>
+branch: <branch>
+contract_version: <CONTRACT version>
+contract_sha256: <SHA-256 of the contract file>
+script_sha256: <SHA-256 of this script>
+source: <source file name>
+source_path: <the source file's path when the run started, relative to the books folder>
+source_sha256: <SHA-256>
+chart: <chart file name, or empty>
+chart_sha256: <SHA-256, or empty>
+period: <period>
+control: <confirmed | same-file | untied>
+control_source: <the outside document, and "typed by user" or the export file name; or empty>
+outside_amounts: <the amounts the user gave, as a list; or empty>
+not_yet_posted: <entry key values the user marked as not yet in the outside record; or empty>
+result: <pass | fail>
+run_at: <started, as YYYY-MM-DDTHH:MM:SS>
+---
+```
+
+`control` is `confirmed` when the output was compared with outside amounts the user gave, `same-file` when the user skipped and it was compared only with the file's own total, and `untied` when neither.
 
 ## Profiling scripts
 
@@ -86,5 +171,5 @@ A profiling script reports facts only, with no interpretation:
 - date range for each date column
 - candidate row keys (columns with all-unique non-blank values)
 - distinct values and counts for low-cardinality text columns (≤ 20 distinct)
-- for each amount column: count positive / negative / zero / blank, and total; also totals by each low-cardinality column
+- for each amount column: count positive / negative / zero / blank, and total; also totals by each low-cardinality column that is not a candidate entry key (no per-entry totals before the outside-fact question)
 - blank counts per column, and any unparseable amounts or dates with row numbers

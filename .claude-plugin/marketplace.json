@@ -1,5 +1,6 @@
 {
   "name": "ledgerskill",
+  "description": "Accounting skills for Claude: turn transaction files into journal entries, invoices or any other scripted, tied-out import ready to post to an accounting system.",
   "owner": {
     "name": "Brian Huebner"
   },
@@ -7,7 +8,7 @@
     {
       "name": "ledgerskill",
       "source": "./",
-      "description": "Grill-first accounting: turn a transaction file into a data contract and a scripted, tied-out journal entry import."
+      "description": "Grill-first accounting: turn a transaction file into a data contract and a scripted, tied-out import of journal entries, invoices or any other transaction, ready to post to an accounting system."
     }
   ]
 }

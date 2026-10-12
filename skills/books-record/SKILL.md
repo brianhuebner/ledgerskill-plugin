@@ -1,6 +1,6 @@
 ---
 name: books-record
-description: Use whenever a grill or a run starts or finishes, and whenever a record in the books folder is written or read — the contract header, a branch's procedure summary (branches/<branch>.procedure.md), the client facts (BOOKS-CONTEXT.md) or a decision memo (decisions/D-NNNN-<slug>.md).
+description: Use whenever a grill or a run starts or finishes, and whenever a record in the books folder is written or read — the contract header, a branch's procedure summary (branches/BRANCH.procedure.md), the client facts (BOOKS-CONTEXT.md) or a decision memo (decisions/D-NNNN-SLUG.md).
 ---
 
 The plugin leaves a written record of every workflow it sets up and every run it makes. Claude writes these records without being asked. The user reads sentences and tables; never show them a YAML header.

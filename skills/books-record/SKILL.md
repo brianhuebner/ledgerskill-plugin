@@ -1,20 +1,21 @@
 ---
 name: books-record
-description: Use whenever a grill or a run starts or finishes, and whenever a record in the books folder is written or read — the contract header, a branch's procedure summary (branches/BRANCH.procedure.md), the client facts (BOOKS-CONTEXT.md) or a decision memo (decisions/D-NNNN-SLUG.md).
+description: Use whenever a grill or a run starts or finishes, and whenever a contract header, a branch's procedure summary (branches/BRANCH.procedure.md), an archived contract or a run folder is written or read.
 ---
 
 The plugin leaves a written record of every workflow it sets up and every run it makes. Claude writes these records without being asked. The user reads sentences and tables; never show them a YAML header.
+
+The books folder is a knowledge bundle. Client facts, policies, parties, decision memos, `index.md` and `log.md` belong to `ledgerskill:books-context`; load it with this skill. The contract and procedure summary headers below use its header rules, so they are concepts in the same bundle.
 
 ## Books folder
 
 | Path | Record | Written | Changes after writing |
 |---|---|---|---|
-| `BOOKS-CONTEXT.md` | Client facts | When the first durable fact is learned | New lines appended as facts are learned |
-| `decisions/D-NNNN-<slug>.md` | Decision memo | When the user accepts the offer | Never, except `status` and `replaced_by` when a new memo replaces it |
+| `index.md`, `log.md`, `entity.md`, `systems/`, `dimensions/`, `parties/`, `terms/`, `policies/`, `decisions/`, `questions/`, `references/` | The books' context | See `ledgerskill:books-context` | See `ledgerskill:books-context` |
 | `branches/<branch>.md` | Contract, with a header | End of a grill | Only when the user changes the contract; `version` rises by one each time |
 | `branches/<branch>.py` | Script | When the contract is written or changed | Regenerated when the contract changes |
 | `branches/<branch>.procedure.md` | Procedure summary | End of the first grill | Rows appended to its Runs table and values to its Values seen list; nothing else |
-| `branches/archive/<branch>.v<N>.md` and `.py` | An earlier contract and its script | Before the contract changes | Never |
+| `branches/archive/<branch>.v<N>.md` and `.py` | An earlier contract and its script | Before the contract changes; the copy's header gets `status: deprecated` | Never |
 | `to_be_processed/` | The user's inbox: source files waiting for a run | By the user | Claude moves a file out after a passing run |
 | `complete/<period>/<branch>-<run id>/` | One run: `import.csv`, `detail.csv`, `checks-<run id>.txt`, and the source file after a passing run | Each run, by the script; the source file by Claude | Never |
 
@@ -42,20 +43,33 @@ The header at the top of `branches/<branch>.md` (template in `ledgerskill:data-c
 | Key | Value |
 |---|---|
 | `type` | `contract` |
+| `title` | The branch name in plain words, as a JSON string: `"Stripe payout settlement"` |
+| `description` | One sentence, as a JSON string: what file it reads and what it produces |
+| `status` | `stable`; `deprecated` in an archived copy |
+| `generated` | As `ledgerskill:books-context` defines; `at` is when this version was written |
 | `id` | The branch name |
 | `version` | `1` when created |
 | `supersedes` | The version this one replaced (`version` − 1); empty for version 1 |
 | `chart` | The chart of accounts file name; empty when None |
 | `layout` | The built-in layout name, or the template file name |
-| `facts` | `BOOKS-CONTEXT.md` once it exists; empty before |
+| `facts` | Concept IDs this contract relies on, as a JSON list: `["entity", "systems/stripe", "dimensions/class"]`; `["BOOKS-CONTEXT"]` in a legacy folder; empty when none |
+| `policies` | Policy IDs this contract relies on, as a JSON list: `["policies/cap-threshold"]`; empty when none |
 | `decisions` | Decision IDs this contract relies on, as a list: `[D-0001, D-0003]`; empty when none |
 | `procedure` | `<branch>.procedure.md` |
 
 ## Procedure summary
 
-Write `branches/<branch>.procedure.md` at the end of the first grill for a branch, whether or not the user ran it. It explains the workflow to someone who was not in the conversation: a reviewer, an auditor, or the user next year. Use these seven sections, in this order:
+Write `branches/<branch>.procedure.md` at the end of the first grill for a branch, whether or not the user ran it. It explains the workflow to someone who was not in the conversation: a reviewer, an auditor, or the user next year. Start with this header, then use these seven sections, in this order:
 
 ```markdown
+---
+type: procedure
+title: "<branch>: procedure"
+description: "How to run <branch> each period, and why it is set up as it is."
+status: stable
+generated: {"by": "ledgerskill/0.4.0", "at": "<now>"}
+contract: /branches/<branch>.md
+---
 # <branch>: procedure
 
 ## 1. Source, result and dates
@@ -100,80 +114,6 @@ Section 7 always gives the `/ledgerskill:run-branch` command, never a direct `py
 
 After a grill that ran, section 5 has one row for that run. After each later run, `ledgerskill:run-branch` appends one row. If the summary is missing when a run finishes (a branch set up before summaries existed), create it from the contract, the profile and this run, and write "Not recorded" in section 3.
 
-## Client facts
+## Client facts and decision memos
 
-`BOOKS-CONTEXT.md` holds what is true about this client across workflows, so no grill asks it twice. `ledgerskill:grill-books` and `ledgerskill:run-branch` read it first and use it to set recommended answers. A question it already answers is not asked.
-
-Write a fact only if all three hold:
-1. It will still be true next month.
-2. It applies to more than one branch, or would to the next one set up.
-3. It is a fact or a definition, not a choice about how one branch books something. Choices go in the contract.
-
-Examples: "Fiscal year ends June 30." "Payroll runs semi-monthly, on the 15th and the last business day." "The POS business day closes at 6 PM local time, so a UTC export splits evenings across two dates." "`LOC01` is the Downtown store."
-
-The first time a contract sets an import tool and layout, record them under Import tool and layout.
-
-Harvest facts from the user's answers and the files. Never interview the user for them. Before writing, name the new facts in the read-back's closing line: "I'll remember: <facts>." Write those the user doesn't correct.
-
-Create the file with this template on the first fact. After that, add new facts as new lines under their section; never change or remove a line. When a fact changes, add the new one with its date and the words "replaces: <old fact>".
-
-```markdown
-# Books context
-
-Facts about these books that hold across workflows. Written by ledgerskill.
-
-## Entity
-- <name, fiscal year end, base currency, time zone>
-
-## Systems that produce files
-- <system>: <what it exports; its time zone or cutoff>
-
-## Import tool and layout
-- <tool>; layout <name>
-
-## Glossary
-- <term or code>: <what it means here>
-
-## Open questions
-- <YYYY-MM-DD> <a question raised and not yet settled>
-```
-
-## Decision memos
-
-A memo records one choice a reviewer will ask about, in the user's own words. Offer one only when all three hold:
-1. It is hard to reverse once the books close on it.
-2. A reviewer would ask why.
-3. There was a real alternative.
-
-Examples: a month-end cutoff for transactions that straddle two periods; booking card sales at gross with fees as their own line instead of net; accruing payroll by pay period instead of by pay date.
-
-Offer it in one line, after the user has answered: "Save this as a decision? (yes)". Offer at most two memos per grill. Write a memo only on yes.
-
-Number memos `D-0001`, `D-0002`, … in the order written: list `decisions/` and take the next number after the highest. A number is never reused, even when a memo is replaced. The slug is 2–4 words from the question, lowercase with hyphens. After writing, add the ID to the `decisions:` header key of each contract that relies on it.
-
-```markdown
----
-type: decision
-id: D-NNNN
-date: <YYYY-MM-DD>
-branches: [<branch>, …]
-status: active
-replaced_by:
-replaces:
----
-# D-NNNN: <the question, in a few words>
-
-**Question.** <what had to be decided, and why it came up>
-
-**Options.**
-1. <option>
-2. <option>
-
-**Choice.** <the option chosen>
-
-**Reason.** "<the user's words, quoted>"
-
-**What would change it.** <the fact or event that would reopen this>
-```
-
-A memo is never rewritten. To change a decision, write a new memo whose `replaces:` names the old ID. The only edit ever made to the old memo is setting `status: replaced` and `replaced_by: <new ID>` in its header.
+These moved to `ledgerskill:books-context` in 0.4.0. Facts that hold across workflows are concepts (`entity.md`, `systems/`, `dimensions/`, `parties/`, `terms/`); rules are `policies/`; choices a reviewer will ask about are `decisions/`. A legacy `BOOKS-CONTEXT.md` is read, never written.

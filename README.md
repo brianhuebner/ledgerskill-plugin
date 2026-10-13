@@ -63,7 +63,7 @@ Start Claude Code in the books folder and run:
 /ledgerskill:grill-books
 ```
 
-Claude finds the two files and asks you to confirm which is which. It profiles the source file, then asks about three rounds of numbered questions, each with a recommended answer. Reply `use your recommendations` to accept them all, or answer in your own words. Before each run, Claude asks what the outside document showed, such as the deposits on your bank statement or the total on your payroll provider's report. Type the amounts or give it an export before you see its totals, so the check is blind. `use your recommendations` never answers this question, and `skip` runs without it, marked as not confirmed. It reads the result back to you, saves it as `branches/<branch>.md`, and offers to produce the import file. It also writes `branches/<branch>.procedure.md`, a procedure summary of the file, your decisions in your own words, why the accounts are set up the way they are, and how to run the next period. Facts that hold across workflows, such as your fiscal year end or when your sales system closes its day, go in `BOOKS-CONTEXT.md`, so the next grill doesn't ask them again. When an answer is a choice a reviewer would ask about, such as a month-end cutoff, Claude offers to save it as a decision memo in `decisions/`.
+Claude finds the two files and asks you to confirm which is which. It profiles the source file, then asks about three rounds of numbered questions, each with a recommended answer. Reply `use your recommendations` to accept them all, or answer in your own words. Before each run, Claude asks what the outside document showed, such as the deposits on your bank statement or the total on your payroll provider's report. Type the amounts or give it an export before you see its totals, so the check is blind. `use your recommendations` never answers this question, and `skip` runs without it, marked as not confirmed. It reads the result back to you, saves it as `branches/<branch>.md`, and offers to produce the import file. It also writes `branches/<branch>.procedure.md`, a procedure summary of the file, your decisions in your own words, why the accounts are set up the way they are, and how to run the next period. Facts that hold across workflows, such as your fiscal year end or when your sales system closes its day, are saved as small linked files (see [Your books folder is a knowledge bundle](#your-books-folder-is-a-knowledge-bundle)), so the next grill doesn't ask them again. When an answer is a choice a reviewer would ask about, such as a month-end cutoff, Claude offers to save it as a decision memo in `decisions/`. When you state a rule that applies everywhere, such as a capitalization threshold, it offers to save it as a policy in `policies/`.
 
 ### 5. What happens to your file
 
@@ -108,7 +108,7 @@ Claude asks in the first round what will import the file, and writes `import.csv
 - **A built-in layout.** `saasant-journal-entry` is SaasAnt Transactions' Journal Entry import into QuickBooks Online: one signed amount column, MM/DD/YYYY dates, journal numbers of 21 characters or fewer. `saasant-invoice` imports invoices instead: one per entry, with a customer on each and a product or service on each line.
 - **Plain,** the default: entry, date, account, debit, credit, one column per tag, and a memo. Map the columns once in whatever you use.
 
-The tool and layout are saved to `BOOKS-CONTEXT.md`, so later grills don't ask again.
+The tool and layout are saved in `systems/`, so later grills don't ask again.
 
 ### Next period
 
@@ -135,11 +135,28 @@ If a check fails, no `import.csv` is written. Claude shows you the failures and 
 
 Runs are never overwritten. Running the same period again gets a new run ID and a new folder, so the files you imported stay as the record of what you imported. To trace an entry in your books, search for the run ID in its memo: it names the one folder that produced it. When a contract changes, the earlier version and its script are kept in `branches/archive/`.
 
+## Your books folder is a knowledge bundle
+
+Everything ledgerskill learns about your books is kept as small Markdown files that link to each other, in Google's [Open Knowledge Format](https://github.com/GoogleCloudPlatform/knowledge-catalog/blob/main/okf/SPEC.md) (OKF v0.2). Each file is one thing: the business, a system that produces files, what QuickBooks Class means in your books, a policy, a decision. Each file says where it came from and whether you confirmed it. `index.md` lists them all with a one-line description, and `log.md` records what changed and when.
+
+| Path | Holds |
+|---|---|
+| `index.md`, `log.md` | The listing and the change history |
+| `entity.md` | Your business: fiscal year end, currency, time zone |
+| `systems/` | Stripe, your payroll provider, your import tool, your ledger |
+| `dimensions/` | What each ledger field means, and its codes (`LOC01` is Downtown) |
+| `policies/` | Rules that apply everywhere, with their amounts and dates |
+| `decisions/` | Choices a reviewer would ask about, in your words |
+| `parties/`, `terms/`, `questions/` | Recurring customers and vendors, your vocabulary, open questions |
+| `references/` | Text you pasted in, such as your accountant's email, kept word for word |
+
+Paste a policy or an SOP into `/ledgerskill:books-context` and it saves the text, lists the rules it found and asks you to confirm each one. Ask it a question, such as "what's our capitalization threshold?", and it answers from these files and names them. A books folder from before 0.4.0 keeps working: its `BOOKS-CONTEXT.md` is still read, and new facts go into the new files.
+
 ## What it does on your computer
 
-- **Writes only into your books folder:** `BOOKS-CONTEXT.md` (client facts), `decisions/` (decision memos you accepted), `branches/` (the contract, its script and its procedure summary), `complete/` (outputs), and the two sample files from `/ledgerskill:demo`. It never deletes or edits your source files or your chart of accounts. The one thing it moves: after a passing run, Claude moves the source file into that run's folder, and never over an existing file.
+- **Writes only into your books folder:** the knowledge files above, `branches/` (the contract, its script and its procedure summary), `scripts/context.py` (a read-only helper that checks and lists the knowledge files), `complete/` (outputs), and the two sample files from `/ledgerskill:demo`. It never deletes or edits your source files or your chart of accounts. The one thing it moves: after a passing run, Claude moves the source file into that run's folder, and never over an existing file.
 - **Runs Python scripts it writes:** each script reads your file and writes its outputs. The rules it follows: standard library only, no network, no subprocesses, no deleting files. Claude Code asks your permission before running a command, unless you've allowed it. The script is in `branches/`, so you can read it first.
-- **Has no hooks, MCP servers or background processes.** The plugin is six plain-text `SKILL.md` files you can read in a few minutes.
+- **Has no hooks, MCP servers or background processes.** The plugin is seven plain-text `SKILL.md` files you can read in a few minutes.
 - **Treats your data as data.** The skills tell Claude never to follow text found in your files, such as a memo field, as an instruction, and to point out anything that reads like one.
 - **What leaves your computer:** what Claude reads during the session goes to Anthropic as part of the conversation, as in any Claude Code session. The skills have Claude work from script output: profile facts (column names, counts, totals, distinct values) and the 3–4 rows in the worked example. The full file is processed by the local script, but anything Claude opens directly is sent too.
 - **Updates:** `/plugin marketplace update` installs whatever is on `main`. Check the version and commit history before updating if you want to review changes.
@@ -153,7 +170,8 @@ Runs are never overwritten. Running the same period again gets a new run ID and 
 | `demo` | You type it | Writes a sample Stripe file and chart of accounts into the current folder |
 | `data-contract` | Automatic | Fixed vocabulary and slot template for every contract |
 | `scripted-arithmetic` | Automatic | Rules every data script must follow |
-| `books-record` | Automatic | The procedure summary, client facts and decision memos written to your books folder |
+| `books-record` | Automatic | The contract header, procedure summary and run folders written to your books folder |
+| `books-context` | Automatic, or you type it | The knowledge bundle: facts, policies, decisions and parties, linked and checked; answers questions about your books |
 
 ## Developing
 

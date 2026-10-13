@@ -4,10 +4,10 @@ description: Interview the user about one accounting workflow and one source fil
 disable-model-invocation: true
 ---
 
-Load the `ledgerskill:data-contract`, `ledgerskill:scripted-arithmetic` and `ledgerskill:books-record` skills first, and follow them throughout. Facts come from the file through scripts. Only decisions come from the user. Outside facts, numbers the user reads from an outside document, are a third kind: never recommended, and never answered by `use your recommendations` (see `scripted-arithmetic`).
+Load the `ledgerskill:data-contract`, `ledgerskill:scripted-arithmetic`, `ledgerskill:books-record` and `ledgerskill:books-context` skills first, and follow them throughout. Facts come from the file through scripts. Only decisions come from the user. Outside facts, numbers the user reads from an outside document, are a third kind: never recommended, and never answered by `use your recommendations` (see `scripted-arithmetic`).
 
 ## 0. Find the files
-If `BOOKS-CONTEXT.md` exists, read it first. Use its facts to set recommended answers, and do not ask a question it already answers.
+Read the books' context first, as `ledgerskill:books-context` describes: `index.md` and the concepts it lists, or a legacy `BOOKS-CONTEXT.md`. Use stable, verified concepts to set recommended answers, and do not ask a question they already answer. Note the ID of each concept you use.
 
 You need one source file and, ideally, a chart of accounts.
 
@@ -24,7 +24,7 @@ If there is a chart, ask in Round 1 which column holds the account names to impo
 Ask at most 4 numbered questions, each with a recommended answer based on the profile:
 1. What is this file?
 2. What period does it cover, and is it complete?
-3. What will import this, and is there a sample file from that tool in the folder? Recommend, in order: the template found in step 0; a built-in layout from `data-contract` when the user names its tool; otherwise `plain`. Skip this question when `BOOKS-CONTEXT.md` already names the tool and layout.
+3. What will import this, and is there a sample file from that tool in the folder? Recommend, in order: the template found in step 0; a built-in layout from `data-contract` when the user names its tool; otherwise `plain`. Skip this question when a stable system concept with `role: import` (or a legacy `BOOKS-CONTEXT.md`) already names the tool and layout.
 4. What should the result agree with? (a bank statement deposit, a lender statement, a payroll provider report, a vendor statement, a POS Z-report…)
 
 Avoid the words "branch", "grain", "contract" and "provenance" in this round. A reply of "use your recommendations" accepts every recommended answer.
@@ -39,7 +39,7 @@ Ask only the questions whose prerequisites are settled, numbered, each with a re
    For each other amount column with a non-zero total, other than the Row total, ask one question phrased from the profile: *"`<col>` totals <x>, all on `<value>` rows. Does it get its own line, and to which account?"* Recommend its own line, to the best-matching account in the chart. Ask nothing when the file has one amount column.
 5. Entry key and entry date.
 6. Accounts: every rule, and every mapping value, gets an account and a side. When there is a chart, recommend only accounts from it, spelled exactly. If the user names an account that is not in the chart, say so and offer the closest accounts from it. When the layout's line names are not accounts (an invoice's products and services, for example), recommend names from the list the layout names instead; ask once for an export of that list, which the user may `skip`, as with the chart.
-7. Dimensions: for each low-cardinality text column the profile found, ask whether it goes to the ledger, which field, the value mapping, the blank rule and which rules carry it. A rule that carries a dimension groups by it.
+7. Dimensions: for each low-cardinality text column the profile found, ask whether it goes to the ledger, which field, the value mapping, the blank rule and which rules carry it. A rule that carries a dimension groups by it. When a dimension concept already gives the field a meaning, recommend its value table, and ask only about codes it doesn't list. A column of a different kind mapped to that field is the one-meaning question from `books-context`.
 8. Fixed fields: ask whether any field should always have the same value, on one account's lines or on all lines. Recommend one when the mapping needs it: an Accounts Receivable or Accounts Payable line needs a Customer or Vendor name in QuickBooks. Accept fixed fields stated in plain words in any round, e.g. *"Use the customer 'Card Sales' for every A/R line"* or *"Put vendor 'ADP' on the payroll liability lines."*
 9. Offset row and control total.
 10. Edge cases the profile found: negative groups, blanks, unparseable values, duplicate keys.
@@ -49,7 +49,7 @@ Every required column of the import layout that the contract does not fill yet i
 When an answer conflicts with the data, say so using numbers from a script, e.g. *"2 rows have no `location`, totaling $305.80. Where do they go?"* Run a script to get those numbers.
 
 ## 4. Read-back
-Read the filled slots back to the user, slot by slot, including the chart of accounts, fixed fields and import layout, and get explicit confirmation. Change anything they correct. End with one line naming the durable facts learned in this grill that pass the `books-record` test: *"I'll remember: the rental system's day closes at 6 PM Mountain."* Leave it out when there are none. During the read-back, offer a decision memo for each answer that passes the `books-record` test, at most two, one line each.
+Read the filled slots back to the user, slot by slot, including the chart of accounts, fixed fields and import layout, and get explicit confirmation. Change anything they correct. End with one line naming the durable facts learned in this grill that pass the `books-context` test: *"I'll remember: the rental system's day closes at 6 PM Mountain."* Leave it out when there are none. During the read-back, offer a decision memo for each answer that passes the `books-context` test, at most two, one line each. When the user stated a rule that applies across branches, offer it once as a policy.
 
 ## 5. Write
 Write `branches/<branch>.md` in the user's working folder using the `data-contract` slot template exactly, header included, with one worked example built by running a script on 3–4 real rows.
@@ -64,4 +64,4 @@ Ask: "Want me to run it now and produce the import file?" If yes:
 6. If every check passed, move the source file into the run folder as `books-record` describes.
 
 ## 7. Write the record
-Whether or not the user ran it, write `branches/<branch>.procedure.md` from the `books-record` template: the profile facts, every decision from the rounds with the user's words quoted, and one Runs row if it ran. Create or add to `BOOKS-CONTEXT.md` with the facts from the read-back, and set the contract header's `facts:` when the file exists. Write each decision memo the user accepted and list its ID in the header's `decisions:`. Tell the user in one line that the procedure summary is saved, and give its path.
+Whether or not the user ran it, write `branches/<branch>.procedure.md` from the `books-record` template: the profile facts, every decision from the rounds with the user's words quoted, and one Runs row if it ran. Record the facts from the read-back, and each decision memo and policy the user accepted, following the `books-context` writing procedure: concepts, `log.md`, `index.md`, then `context.py check`. List the IDs of the concepts this contract relies on in its header's `facts:`, `policies:` and `decisions:`. Never write to a legacy `BOOKS-CONTEXT.md`. Tell the user in one line that the procedure summary is saved, and give its path.

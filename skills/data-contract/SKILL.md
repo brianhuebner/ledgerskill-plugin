@@ -46,6 +46,7 @@ A **branch** is one named workflow with one contract (e.g. `stripe-payout-settle
 6. **Names come from a list.** When there is a chart of accounts, every account in the Lines table, its mappings and the fixed fields is spelled exactly as in its account column. When the layout's line names are something else, such as products and services, they are spelled exactly as in that list. A name not in its list is a question, never a new name.
 7. **Dimension ≠ fixed field.** A dimension's value comes from a source column and can differ row to row. A fixed field's value is a constant the user stated; it is not read from the source.
 8. **One row, several rules.** A row can feed more than one rule, each with its own amount column. A card charge feeds sales at `gross` and fees at `fee`; a pay line feeds wages, employer taxes and withholdings. Each rule groups its own way.
+9. **Fact ≠ choice ≠ policy.** A fact about the books (fiscal year end, what `LOC01` is) is a concept that `ledgerskill:books-context` writes. A choice about how this branch books something is a contract slot, or a decision memo when a reviewer would ask why. A rule that applies across branches (a capitalization threshold) is a policy; the contract names it under `policies:`.
 
 ## Slot template
 
@@ -54,12 +55,17 @@ Every branch file `branches/<branch>.md` has exactly these sections and slots, i
 ```markdown
 ---
 type: contract
+title: "<the branch name in plain words>"
+description: "<one sentence: what file it reads and what it produces>"
+status: stable
+generated: {"by": "ledgerskill/0.4.0", "at": "<now>"}
 id: <branch>
 version: 1
 supersedes:
 chart: <chart file name, or empty>
 layout: <layout name, or the template file name>
-facts:
+facts: <JSON list of concept IDs, or empty>
+policies: <JSON list of policy IDs, or empty>
 decisions:
 procedure: <branch>.procedure.md
 ---
